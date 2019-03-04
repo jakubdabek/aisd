@@ -1,10 +1,17 @@
 #include "forward_list.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 
 int find_comparisons_count = 0;
 int delete_comparisons_count = 0;
+
+struct forward_list
+{
+    int value;
+    struct forward_list *next;
+};
 
 void print_forward_list(struct forward_list *head)
 {
@@ -19,9 +26,23 @@ void print_forward_list(struct forward_list *head)
     printf("]");
 }
 
-bool is_empty(struct forward_list **head)
+int* get_value(struct forward_list *head, size_t index)
 {
-    if (head == NULL || *head == NULL)
+    if (head == NULL)
+        return NULL;
+
+    for (size_t i = 0; i < index && head != NULL; i++)
+    {
+        head = head->next;
+    }
+    if (head != NULL)
+        return &(head->value);
+    return NULL;
+}
+
+bool is_empty(struct forward_list *head)
+{
+    if (head == NULL)
         return true;
     return false;
 }
@@ -47,8 +68,6 @@ struct forward_list** findMTF(struct forward_list **head, const int value)
     i++;
     while (*current != NULL)
     {
-        //printf("in findMTF %d: ", i); print_forward_list(*current); printf("\n");
-        //print_forward_list(*head); printf("\n");
         find_comparisons_count++;
         if ((*current)->value == value)
         {
@@ -69,6 +88,7 @@ struct forward_list** findTRANS(struct forward_list ** const head, const int val
     if (head == NULL)
         return NULL;
 
+    find_comparisons_count++;
     if ((*head)->value == value)
     {
         return head;

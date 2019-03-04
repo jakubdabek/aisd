@@ -1,6 +1,7 @@
 #include "forward_list.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <time.h>
 
 int LIST_SIZE = 100;
@@ -143,7 +144,7 @@ void fill_descending(struct forward_list **head, int list[], size_t size)
 
 int find_max_ascending(struct forward_list **head, struct find_function find_func)
 {
-    int max = (*head)->value;
+    int max = *get_value(*head, 0);
     for (size_t i = 0; i < LIST_SIZE; i++)
     {
         if (find_func.find(head, i) != NULL && i > max)
@@ -156,7 +157,7 @@ int find_max_ascending(struct forward_list **head, struct find_function find_fun
 
 int find_max_descending(struct forward_list **head, struct find_function find_func)
 {
-    int max = (*head)->value;
+    int max = *get_value(*head, 0);
     for (int i = LIST_SIZE - 1; i >= 0; i--)
     {
         if (find_func.find(head, i) != NULL && i > max)
@@ -175,7 +176,8 @@ int find_max_random(struct forward_list **head, struct find_function find_func)
         list[i] = i;
     }
     shuffle(list, LIST_SIZE);
-    int max = (*head)->value;
+
+    int max = *get_value(*head, 0);
     for (size_t i = 0; i < LIST_SIZE; i++)
     {
         if (find_func.find(head, list[i]) != NULL && list[i] > max)
@@ -197,7 +199,7 @@ void test(
     struct forward_list *head = NULL;
     int values[LIST_SIZE];
     fill_func.fill(&head, values, LIST_SIZE);
-    while (!is_empty(&head))
+    while (!is_empty(head))
     {
         //printf("Before find_max: "); print_forward_list(head); printf("\n");
         int max = find_max_func.find_max(&head, find_func);
