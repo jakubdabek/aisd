@@ -1,5 +1,6 @@
 CC:=gcc
 CFLAGS:=-Wall -pedantic -std=c11
+LDLIBS:=-lm
 
 all: main
 
