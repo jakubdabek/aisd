@@ -73,6 +73,7 @@ struct result
     double swaps_M2 = 0.0;
     double time_mean = 0.0;
     double time_M2 = 0.0;
+    
     double comparisons_stddev() const { return std::sqrt(comparisons_M2 / repetitions); }
     double swaps_stddev() const { return std::sqrt(swaps_M2 / repetitions); }
     double time_stddev() const { return std::sqrt(time_M2 / repetitions); }
@@ -124,7 +125,7 @@ int test_all(std::string filename, std::string number_s)
     if (!(std::stringstream{number_s} >> number))
         return 1;
     
-    std::mt19937 rng{std::random_device{}()};
+    std::minstd_rand rng{std::random_device{}()};
     std::uniform_int_distribution<int> dist{0, 100'000};
 
     std::unordered_map<std::string, std::vector<result>> results;
@@ -173,7 +174,7 @@ int test_all(std::string filename, std::string number_s)
         std::cerr << sort_type << "," << iterations << "\n";
         for (const auto& r : res)
         {
-            std::cerr << std::setprecision(10) << r.csv() << "\n";
+            //std::cerr << std::setprecision(10) << r.csv() << "\n";
         }
     }
     

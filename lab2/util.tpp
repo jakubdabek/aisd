@@ -31,7 +31,7 @@ private:
 };
 
 template<class T>
-void Swapper<T>::swap(T& a, T& b)
+inline void Swapper<T>::swap(T& a, T& b)
 {
     if (_verbose)
         std::cerr << "Swapping " << a << " and " << b << std::endl;
@@ -73,7 +73,7 @@ private:
 };
 
 template<class T>
-bool Comparer<T>::compare(const T& a, const T& b)
+inline bool Comparer<T>::compare(const T& a, const T& b)
 {
     if (_verbose)
         std::cerr << "Comparing " << a << " and " << b << std::endl;

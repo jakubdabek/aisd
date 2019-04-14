@@ -41,10 +41,10 @@ void selection_sort(Iter begin, Iter end, Swapper<T>& swp, Comparer<T>& cmp)
     if (begin == end)
         return;
     
-    for (auto i = begin; i != (end - 1); i++)
+    for (auto i = begin; i < (end - 1); i++)
     {
         auto min_index = i;
-        for (auto j = i + 1; j != end; j++)
+        for (auto j = i + 1; j < end; j++)
         {
             if (cmp.compare(*j, *min_index))
             {

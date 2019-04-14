@@ -72,7 +72,7 @@ struct forward_list** findMTF(struct forward_list **head, const int value)
         if ((*current)->value == value)
         {
             struct forward_list *found = *current;
-            *current= found->next;
+            *current = found->next;
             found->next = *head;
             *head = found;
             return head;
