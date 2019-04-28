@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <numeric>
 #include <random>
 #include <chrono>
 #include <map>
@@ -19,6 +20,8 @@ void main_priority_queue(const std::set<std::string>&);
 void main_dijkstra(const std::set<std::string>&);
 void main_kruskal(const std::set<std::string>&);
 void main_prim(const std::set<std::string>&);
+void main_kosaraju(const std::set<std::string>&);
+void main_tarjan(const std::set<std::string>&);
 
 int main(int argc, char *argv[])
 {
@@ -39,6 +42,14 @@ int main(int argc, char *argv[])
         {
             "-d",
             main_dijkstra,
+        },
+        {
+            "-scck",
+            main_kosaraju,
+        },
+        {
+            "-scct",
+            main_tarjan,
         },
     };
 
@@ -326,4 +337,65 @@ void main_prim(const std::set<std::string>& options)
     std::cout << "tree:" << std::endl;
     std::cout << tree << std::endl;
     std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(after - before).count() << "ms" << std::endl;
+}
+
+template<class F>
+void main_scc(const std::set<std::string>& options, const F& func)
+{
+    std::ostream& os = maybe_stream(options.count("-i") > 0);
+    int v, e;
+    os << "Enter v, e" << std::endl;
+    std::cin >> v >> e;
+    std::vector<std::pair<DirectedGraph::vertex_t, DirectedGraph::vertex_t>> edges(v);
+
+    for (int i = 0; i < e; i++)
+    {
+        DirectedGraph::vertex_t u, v;
+        os << "Enter edge " << i << std::endl;
+        std::cin >> u >> v;
+        edges.emplace_back(u, v);
+    }
+    auto doOnce = [&](const auto& e)
+    {
+        DirectedGraph graph(v);
+        for (const auto& edge : e)
+            graph.insert_edge(edge.first, edge.second);
+
+        auto before = std::chrono::high_resolution_clock::now();
+        auto paths = func(graph, options.count("-v") > 0);
+        auto after = std::chrono::high_resolution_clock::now();
+        std::cout << "Strongly connected components:" << std::endl;
+        std::cout << paths << std::endl;
+        std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(after - before).count() << "ms" << std::endl;
+    };
+    
+    doOnce(edges);
+
+    std::mt19937 rng{std::random_device{}()};
+
+    for (int i = 0; i < 5; i++)
+    {
+        auto lol = edges;
+        std::vector<DirectedGraph::vertex_t> permutation(v);
+        std::iota(permutation.begin(), permutation.end(), 0);
+        std::shuffle(permutation.begin(), permutation.end(), rng);
+        std::transform(lol.begin(), lol.end(), lol.begin(), [&](auto val)
+        {
+            val.first = permutation[val.first];
+            val.second = permutation[val.second];
+
+            return val;
+        });
+        doOnce(lol);
+    }
+}
+
+void main_kosaraju(const std::set<std::string>& options)
+{
+    main_scc(options, [&](const auto& graph, bool verbose) { return graph.kosaraju(verbose); });
+}
+
+void main_tarjan(const std::set<std::string>& options)
+{
+    main_scc(options, [&](const auto& graph, bool verbose) { return graph.tarjan(verbose); });
 }

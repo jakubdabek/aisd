@@ -4,7 +4,10 @@
 #include "util.hpp"
 
 #include <map>
+#include <stack>
 #include <optional>
+#include <algorithm>
+
 
 void DirectedGraph::insert_edge(vertex_t source, vertex_t sink, weight_t weight)
 {
@@ -27,7 +30,7 @@ struct dijkstra_vertex_info
     }
 };
 
-auto DirectedGraph::dijkstra(vertex_t source, bool verbose) -> std::vector<std::pair<weight_t, std::deque<vertex_t>>>
+auto DirectedGraph::dijkstra(vertex_t source, bool verbose) const -> std::vector<std::pair<weight_t, std::deque<vertex_t>>>
 {
     if (source >= size)
         return {};
@@ -87,20 +90,6 @@ auto DirectedGraph::dijkstra(vertex_t source, bool verbose) -> std::vector<std::
 
     std::vector<std::pair<weight_t, std::deque<vertex_t>>> paths;
     paths.reserve(edges.size() - 1);
-    // for (vertex_t sink = 0; sink < size; ++sink)
-    // {
-    //     auto& [distance, path] = paths.emplace_back();
-    //     path.push_back(sink);
-    //     const auto& current_info = vertex_info[sink];
-    //     distance = *current_info.distance;
-    //     auto current = current_info.previous;
-
-    //     for (auto prev = vertex_info[current].previous; current != prev; prev = vertex_info[prev].previous)
-    //     {
-    //         path.push_back(current);
-    //         current = vertex_info[current].previous;
-    //     }
-    // }
 
     for (vertex_t sink = 0; sink < size; ++sink)
     {
@@ -127,4 +116,136 @@ auto DirectedGraph::dijkstra(vertex_t source, bool verbose) -> std::vector<std::
     }
 
     return paths;
+}
+
+auto DirectedGraph::kosaraju(bool verbose) const -> std::map<vertex_t, std::vector<vertex_t>>
+{
+    std::ostream& os = maybe_stream(verbose);
+
+    std::vector<vertex_t> l;
+    std::vector<bool> visited(size, false);
+    std::multimap<vertex_t, vertex_t> transposed;
+
+    std::function<void(vertex_t)> dfs = [&](vertex_t v)
+    {
+        if (visited[v])
+            return;
+        
+        visited[v] = true;
+        os << "Visiting " << v << std::endl;
+        auto range = edges.equal_range(v);
+        for (auto it = range.first; it != range.second; ++it)
+        {
+            auto next = it->second.first;
+            transposed.emplace(next, v);
+            os << "Entering " << next << std::endl;
+            dfs(next);
+            os << "Back to " << v << std::endl;
+        }
+        l.push_back(v);
+    };
+
+    dfs(0);
+
+    visited = std::vector<bool>(size, false);
+    std::map<vertex_t, std::vector<vertex_t>> components;
+
+    std::function<void(vertex_t, vertex_t)> assign = [&](vertex_t v, vertex_t root)
+    {
+        if (visited[v])
+            return;
+
+        os << "Visiting " << v << std::endl;
+
+        auto [it, done] = components.try_emplace(root);
+        it->second.push_back(v);
+        visited[v] = true;
+
+        auto range = transposed.equal_range(v);
+        for (auto it = range.first; it != range.second; ++it)
+        {
+            auto next = it->second;
+            assign(next, root);
+        }
+    };
+
+    os << l << std::endl;
+
+    for (auto it = l.rbegin(); it != l.rend(); ++it)
+    {
+        assign(*it, *it);
+    }
+
+    return components;
+}
+
+struct tarjan_vertex_info
+{
+    std::optional<int> index;
+    int lowlink;
+    bool onStack = false;
+};
+
+auto DirectedGraph::tarjan(bool verbose) const -> std::vector<std::vector<vertex_t>>
+{
+    std::ostream& os = maybe_stream(verbose);
+
+    std::vector<tarjan_vertex_info> infos(size);
+    std::for_each(infos.begin(), infos.end(), [i = 0](tarjan_vertex_info& info) mutable
+    {
+        info.lowlink = i++;
+    });
+
+    int index = 0;
+    std::stack<vertex_t> s;
+    std::vector<std::vector<vertex_t>> sccs;
+
+    std::function<void(vertex_t)> strongconnect = [&](vertex_t v)
+    {
+        os << "Entering " << v << std::endl;
+        auto &info = infos[v];
+        info.index = index;
+        info.lowlink = index;
+        index++;
+        s.push(v);
+        info.onStack = true;
+
+        auto range = edges.equal_range(v);
+        for (auto it = range.first; it != range.second; ++it)
+        {
+            auto &next_info = infos[it->second.first];
+            if (!next_info.index.has_value())
+            {
+                strongconnect(it->second.first);
+                info.lowlink = std::min(info.lowlink, next_info.lowlink);
+            }
+            else if (next_info.onStack)
+            {
+                info.lowlink = std::min(info.lowlink, *next_info.index);
+            }
+        }
+
+        if (info.index == info.lowlink)
+        {
+            auto& scc = sccs.emplace_back();
+            while (true)
+            {
+                auto w = s.top(); s.pop();
+                infos[w].onStack = false;
+                scc.push_back(w);
+                if (w == v)
+                    break;
+            }
+        }
+    };
+
+
+    for (vertex_t i = 0; i < size; i++)
+    {
+        if (!infos[i].index.has_value())
+            strongconnect(i);
+    }
+
+    std::reverse(sccs.begin(), sccs.end());
+    return sccs;
 }

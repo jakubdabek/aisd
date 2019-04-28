@@ -14,7 +14,12 @@ public:
     explicit DirectedGraph(vertex_t size) : size(size) {}
     void insert_edge(vertex_t source, vertex_t sink, weight_t weight = 0);
 
-    auto dijkstra(vertex_t source, bool verbose = false) -> std::vector<std::pair<weight_t, std::deque<vertex_t>>>;
+    // O(E + V log V)
+    auto dijkstra(vertex_t source, bool verbose = false) const -> std::vector<std::pair<weight_t, std::deque<vertex_t>>>;
+    // O(V + E)
+    auto kosaraju(bool verbose = false) const -> std::map<vertex_t, std::vector<vertex_t>>;
+    // O(V + E)
+    auto tarjan(bool verbose = false) const -> std::vector<std::vector<vertex_t>>;
 private:
     vertex_t size;
     std::multimap<vertex_t, std::pair<vertex_t, weight_t>> edges;

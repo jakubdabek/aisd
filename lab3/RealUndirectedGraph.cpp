@@ -21,7 +21,7 @@ struct kruskal_vertex_info
     int rank;
 };
 
-auto RealUndirectedGraph::kruskal() -> std::pair<weight_t, std::vector<std::pair<vertex_t, vertex_t>>>
+auto RealUndirectedGraph::kruskal() const -> std::pair<weight_t, std::vector<std::pair<vertex_t, vertex_t>>>
 {
     std::vector<std::tuple<vertex_t, vertex_t, weight_t>> unique_edges;
     unique_edges.reserve(edges.size() / 2);
@@ -103,7 +103,7 @@ struct prim_vertex_info
     }
 };
 
-auto RealUndirectedGraph::prim(bool verbose) -> std::pair<weight_t, std::vector<std::pair<vertex_t, vertex_t>>>
+auto RealUndirectedGraph::prim(bool verbose) const -> std::pair<weight_t, std::vector<std::pair<vertex_t, vertex_t>>>
 {
     std::ostream& os = maybe_stream(verbose);
 

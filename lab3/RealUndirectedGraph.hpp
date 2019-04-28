@@ -14,8 +14,10 @@ public:
     explicit RealUndirectedGraph(vertex_t size) : size(size) {}
     void insert_edge(vertex_t source, vertex_t sink, weight_t weight = 0);
 
-    auto kruskal() -> std::pair<weight_t, std::vector<std::pair<vertex_t, vertex_t>>>;
-    auto prim(bool verbose = false) -> std::pair<weight_t, std::vector<std::pair<vertex_t, vertex_t>>>;
+    // O(E log V)
+    auto kruskal() const -> std::pair<weight_t, std::vector<std::pair<vertex_t, vertex_t>>>;
+    // O(E log E) or O(E log V)
+    auto prim(bool verbose = false) const -> std::pair<weight_t, std::vector<std::pair<vertex_t, vertex_t>>>;
 
 private:
     vertex_t size;
