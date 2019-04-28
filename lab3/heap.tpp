@@ -158,11 +158,17 @@ struct IndexSwapper
 };
 
 template<class T, class ComparerT = std::less<T>, class SwapperT = IndexSwapper<T>>
-class heap
+class heap_util
 {
 public:
     template<class Container>
-    static void heapify(Container& c, const ComparerT& cmp = {}, const SwapperT& swp = {});
+    static void heapify(Container& c, const ComparerT& cmp = {}, const SwapperT& swp = {})
+    {
+        for (std::make_signed_t<size_t> i = parent(c.size() - 1); i >= 0; i--)
+        {
+            sift_down(c, i, c.size(), cmp, swp);
+        }
+    }
 
     template<class Container>
     static void push(Container& c, const T& value, const ComparerT& cmp = {}, const SwapperT& swp = {})
@@ -262,7 +268,7 @@ private:
     template<class Container>
     static void after_pop(Container& c, const ComparerT& cmp = {}, const SwapperT& swp = {})
     {
-        sift_down(c, 0, c.size());
+        sift_down(c, 0, c.size(), cmp, swp);
     }
 };
 
@@ -522,7 +528,7 @@ inline void array_heap<T, ComparerT>::sift_up(size_t index, size_t top)
 template<class T, class ComparerT>
 inline void array_heap<T, ComparerT>::sift_down(size_t index, size_t end)
 {
-    auto has_children = [&](size_t i) { return left_child(index) < end; };
+    auto has_children = [&](size_t i) { return left_child(i) < end; };
     while (has_children(index))
     {
         auto to_swap = index;
