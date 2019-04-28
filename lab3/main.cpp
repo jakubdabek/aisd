@@ -1,88 +1,68 @@
 #include "heap.tpp"
 #include "priority_queue.tpp"
-#include "Graph.hpp"
+#include "DirectedGraph.hpp"
+#include "RealUndirectedGraph.hpp"
+#include "util.hpp"
 
 #include <iostream>
 #include <sstream>
 #include <random>
 #include <chrono>
 #include <map>
+#include <set>
 
-namespace impl {
-    using std::begin;
-    using std::end;
 
-    template<class T>
-    using begin_t = decltype(begin(std::declval<const T&>()));
-    template<class T>
-    using end_t = decltype(end(std::declval<const T&>()));
-
-    template<class T, class = void>
-    struct is_print_iterable : std::false_type {};
-
-    template<class T>
-    struct is_print_iterable<T, std::void_t<begin_t<T>, end_t<T>, decltype(++std::declval<begin_t<T>&>()), decltype(*std::declval<begin_t<T>&>())>>
-        : std::true_type {};
-    
-    template<class... Ts>
-    struct is_print_iterable<std::basic_string<Ts...>, void> : std::false_type {};
-
-    template<int n>
-    struct is_print_iterable<char[n], void> : std::false_type {};
-
-    template<class T>
-    constexpr bool is_print_iterable_v = is_print_iterable<T>::value;
-
-    template<template<class...> class, class...>
-    struct is_instantiation : std::false_type {};
-
-    template<template<class...> class T, class... U>
-    struct is_instantiation<T, T<U...>> : std::true_type {};
-
-    template<class T>
-    constexpr bool is_iterable_v = is_instantiation<std::vector, T>::value || is_instantiation<std::deque, T>::value;
-}
-
-template<class T>
-std::enable_if_t<impl::is_print_iterable_v<T>, std::ostream&> operator<<(std::ostream& os, const T& iterable)
-{
-    char sep[] = "\0 ";
-    os << '[';
-    for (const auto& val : iterable)
-    {
-        os << sep << val;
-        sep[0] = ',';
-    }
-    os << ']';
-    return os;
-}
-
-template<class T, class U>
-std::ostream& operator<<(std::ostream& os, const std::pair<T, U> p)
-{
-    return os << "(" << p.first << ", " << p.second << ")";
-}
-
-void main_int(int n, std::mt19937& rng);
-void main_double(int n, std::mt19937& rng);
-void main_check();
-void main_interactive();
-void main_dijkstra();
+void main_int(const std::set<std::string>&);
+void main_double(const std::set<std::string>&);
+void main_check(const std::set<std::string>&);
+void main_priority_queue(const std::set<std::string>&);
+void main_dijkstra(const std::set<std::string>&);
+void main_kruskal(const std::set<std::string>&);
+void main_prim(const std::set<std::string>&);
 
 int main(int argc, char *argv[])
 {
-    std::mt19937 rng{std::random_device{}()};
-    int n = 30;
-    if (argc > 1) std::stringstream{argv[1]} >> n;
-    // main_int(n, rng);
-    // main_double(n, rng);
-    // main_check();
-    // main_interactive();
-    main_dijkstra();
+    std::map<std::string, std::function<void(const std::set<std::string>&)>> commands
+    {
+        {
+            "-q",
+            main_priority_queue,
+        },
+        {
+            "-k",
+            main_kruskal,
+        },
+        {
+            "-p",
+            main_prim,
+        },
+        {
+            "-d",
+            main_dijkstra,
+        },
+    };
+
+    std::string command = "-q";
+    if (argc > 1)
+        command = argv[1];
+    
+    std::set<std::string> options;
+    for (int i = 2; i < argc; i++)
+    {
+        options.emplace(argv[i]);
+    }
+
+    if (auto c = commands.find(command); c != commands.end())
+    {
+        c->second(options);
+    }
 }
 
-void main_int(int n, std::mt19937& rng)
+void main_int(const std::set<std::string>& options)
 {
+    std::mt19937 rng{std::random_device{}()};
+    int n = 30;
+    if (!options.empty()) std::stringstream{*options.begin()} >> n;
     std::uniform_int_distribution dist(1, 1000);
 
     std::vector<int> vec(n);
@@ -105,8 +85,11 @@ void main_int(int n, std::mt19937& rng)
     // array_heap<int>::heapify(vec);
 }
 
-void main_double(int n, std::mt19937& rng)
+void main_double(const std::set<std::string>& options)
 {
+    std::mt19937 rng{std::random_device{}()};
+    int n = 30;
+    if (!options.empty()) std::stringstream{*options.begin()} >> n;
     std::uniform_real_distribution dist(0.0, 10.0);
 
     std::vector<double> vec(n);
@@ -117,10 +100,9 @@ void main_double(int n, std::mt19937& rng)
     array_heap<double>::heapify(vec);
 }
 
-void main_check()
+void main_check(int n)
 {
     std::mt19937 rng{std::random_device{}()};
-    int n = 30;
     priority_queue<int> p;
 
     std::uniform_int_distribution dist(1, 1000);
@@ -155,7 +137,14 @@ void main_check()
     std::cout << p.print() << "\n";
 }
 
-void main_interactive()
+void main_check(const std::set<std::string>& options)
+{
+    int n = 30;
+    if (!options.empty()) std::stringstream{*options.begin()} >> n;
+    main_check(n);
+}
+
+void main_priority_queue(const std::set<std::string>&)
 {
     priority_queue<int> q;
     int ops;
@@ -260,30 +249,81 @@ void main_interactive()
     }
 }
 
-void main_dijkstra()
+void main_dijkstra(const std::set<std::string>& options)
 {
+    std::ostream& os = maybe_stream(options.count("-i") > 0);
     int v, e;
-    std::cout << "Enter v, e" << std::endl;
+    os << "Enter v, e" << std::endl;
     std::cin >> v >> e;
-    Graph graph(v);
+    DirectedGraph graph(v);
 
     for (int i = 0; i < e; i++)
     {
-        Graph::vertex_t u, v;
-        Graph::weight_t w;
-        std::cout << "Enter edge " << i << std::endl;
+        DirectedGraph::vertex_t u, v;
+        DirectedGraph::weight_t w;
+        os << "Enter edge " << i << std::endl;
         std::cin >> u >> v >> w;
         graph.insert_edge(u, v, w);
     }
 
-    Graph::vertex_t source;
-    std::cout << "Enter source" << std::endl;
+    DirectedGraph::vertex_t source;
+    os << "Enter source" << std::endl;
     std::cin >> source;
 
     auto before = std::chrono::high_resolution_clock::now();
-    auto paths = graph.dijkstra(source);
+    auto paths = graph.dijkstra(source, options.count("-v") > 0);
     auto after = std::chrono::high_resolution_clock::now();
     std::cout << "Paths:" << std::endl;
     std::cout << paths << std::endl;
-    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(after - before).count() << "µs" << std::endl;
+    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(after - before).count() << "ms" << std::endl;
+}
+
+void main_kruskal(const std::set<std::string>& options)
+{
+    std::ostream& os = maybe_stream(options.count("-i") > 0);
+    int v, e;
+    os << "Enter v, e" << std::endl;
+    std::cin >> v >> e;
+    RealUndirectedGraph graph(v);
+
+    for (int i = 0; i < e; i++)
+    {
+        RealUndirectedGraph::vertex_t u, v;
+        RealUndirectedGraph::weight_t w;
+        os << "Enter edge " << i << std::endl;
+        std::cin >> u >> v >> w;
+        graph.insert_edge(u, v, w);
+    }
+
+    auto before = std::chrono::high_resolution_clock::now();
+    auto tree = graph.kruskal();
+    auto after = std::chrono::high_resolution_clock::now();
+    std::cout << "tree:" << std::endl;
+    std::cout << tree << std::endl;
+    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(after - before).count() << "ms" << std::endl;
+}
+
+void main_prim(const std::set<std::string>& options)
+{
+    std::ostream& os = maybe_stream(options.count("-i") > 0);
+    int v, e;
+    os << "Enter v, e" << std::endl;
+    std::cin >> v >> e;
+    RealUndirectedGraph graph(v);
+
+    for (int i = 0; i < e; i++)
+    {
+        RealUndirectedGraph::vertex_t u, v;
+        RealUndirectedGraph::weight_t w;
+        os << "Enter edge " << i << std::endl;
+        std::cin >> u >> v >> w;
+        graph.insert_edge(u, v, w);
+    }
+
+    auto before = std::chrono::high_resolution_clock::now();
+    auto tree = graph.prim(options.count("-v") > 0);
+    auto after = std::chrono::high_resolution_clock::now();
+    std::cout << "tree:" << std::endl;
+    std::cout << tree << std::endl;
+    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(after - before).count() << "ms" << std::endl;
 }

@@ -4,11 +4,11 @@
 
 #include <map>
 
-template<class T>
+template<class T, class Priority = int>
 class priority_queue
 {
 private:
-    using priority_t = int;
+    using priority_t = Priority;
     using value_t = std::tuple<priority_t, T, typename std::multimap<T, size_t>::iterator>;
 
     static std::ostream& print(std::ostream& os, const value_t& v)    
@@ -148,5 +148,5 @@ private:
 
     // array_heap<std::tuple<int, T, std::multimap<T, size_t>::iterator>, Comparer> heap;
 
-    friend void main_check();
+    friend void main_check(int);
 };

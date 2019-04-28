@@ -8,7 +8,6 @@
 #include <string>
 
 
-
 template<class T, class ComparerT = std::less<T>>
 class iterator_heap
 {

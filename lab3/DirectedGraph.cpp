@@ -1,11 +1,12 @@
-#include "Graph.hpp"
+#include "DirectedGraph.hpp"
 
 #include "priority_queue.tpp"
+#include "util.hpp"
 
 #include <map>
 #include <optional>
 
-void Graph::insert_edge(vertex_t source, vertex_t sink, weight_t weight)
+void DirectedGraph::insert_edge(vertex_t source, vertex_t sink, weight_t weight)
 {
     edges.emplace(source, std::make_pair(sink, weight));
 }
@@ -13,8 +14,8 @@ void Graph::insert_edge(vertex_t source, vertex_t sink, weight_t weight)
 struct dijkstra_vertex_info
 {
     bool visited;
-    std::optional<Graph::distance_t> distance;
-    Graph::vertex_t previous;
+    std::optional<DirectedGraph::distance_t> distance;
+    DirectedGraph::vertex_t previous;
 
     friend std::ostream& operator<<(std::ostream& os, const dijkstra_vertex_info& info)
     {
@@ -26,14 +27,19 @@ struct dijkstra_vertex_info
     }
 };
 
-auto Graph::dijkstra(vertex_t source) -> std::vector<std::pair<weight_t, std::deque<vertex_t>>>
+auto DirectedGraph::dijkstra(vertex_t source, bool verbose) -> std::vector<std::pair<weight_t, std::deque<vertex_t>>>
 {
-    std::map<vertex_t, dijkstra_vertex_info> vertex_info;
-    priority_queue<vertex_t> q;
+    if (source >= size)
+        return {};
+    
+    std::ostream& os = maybe_stream(verbose);
+
+    std::vector<dijkstra_vertex_info> vertex_info;
+    vertex_info.reserve(size);
 
     for (vertex_t i = 0; i < size; i++)
     {
-        vertex_info.insert({ i, { false, std::nullopt, i }});
+        vertex_info.push_back({ false, std::nullopt, i });
     }
 
     auto& source_info = vertex_info[source];
@@ -41,12 +47,13 @@ auto Graph::dijkstra(vertex_t source) -> std::vector<std::pair<weight_t, std::de
     source_info.distance = 0;
     source_info.previous = source;
 
+    priority_queue<vertex_t> q;
     q.insert(source, 0);
 
     while (!q.empty())
     {
         const auto current = *q.pop();
-        std::cout << "In vertex " << current << std::endl;
+        os << "In vertex " << current << std::endl;
         const auto range = edges.equal_range(current);
         auto& current_info = vertex_info[current];
         const auto& current_distance = *current_info.distance;
@@ -55,7 +62,7 @@ auto Graph::dijkstra(vertex_t source) -> std::vector<std::pair<weight_t, std::de
         {
             auto next = it->second.first;
             auto &next_info = vertex_info[next];
-            std::cout << "Checking " << it->second.first << std::endl;
+            os << "Checking " << it->second.first << ", " << next_info << std::endl;
             if (!next_info.visited)
             {
                 auto weight = it->second.second;
@@ -73,10 +80,10 @@ auto Graph::dijkstra(vertex_t source) -> std::vector<std::pair<weight_t, std::de
         current_info.visited = true;
     }
 
-    // for (const auto& v : vertex_info)
-    // {
-    //     std::cout << v.first << ": " << v.second << std::endl;
-    // }
+    for (vertex_t i = 0; i < size; i++)
+    {
+        os << i << ": " << vertex_info[i].previous << std::endl;
+    }
 
     std::vector<std::pair<weight_t, std::deque<vertex_t>>> paths;
     paths.reserve(edges.size() - 1);
