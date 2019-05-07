@@ -51,6 +51,10 @@ int main(int argc, char *argv[])
             "-scct",
             main_tarjan,
         },
+        {
+            "-scc",
+            main_tarjan,
+        },
     };
 
     std::string command = "-q";
@@ -231,26 +235,41 @@ void main_priority_queue(const std::set<std::string>&)
                 std::cout << q.print() << '\n';\
                 return true;
             }
-        }
+        },
+        {
+            "help",
+            [&]
+            {
+                std::cout << "Enter operation:"
+                          << " insert x p |"
+                          << " empty |"
+                          << " top |"
+                          << " pop |"
+                          << " priority x p |"
+                          << " print |"
+                          << " help\n";
+                return true;
+            }
+        },
     };
+
+    operations.at("help")();
+
     for (int i = 0; i < ops || ops < 0; i++)
     {
         std::string op;
-        std::cout << "Enter operation:\n"
-                  << "  insert x p\n"
-                  << "  empty\n"
-                  << "  top\n"
-                  << "  pop\n"
-                  << "  priority x p\n"
-                  << "  print\n";
+        
+        std::cin.clear();
         if (!(std::cin >> op))
             return;
+
         if (auto o = operations.find(op); o != operations.end())
         {
             if (!o->second())
             {
                 std::cout << "Wrong arguments\n";
                 std::cin.clear();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             }
         }
         else
@@ -340,7 +359,7 @@ void main_prim(const std::set<std::string>& options)
 }
 
 template<class F>
-void main_scc(const std::set<std::string>& options, const F& func)
+void main_scc(const std::set<std::string>& options, F&& func)
 {
     std::ostream& os = maybe_stream(options.count("-i") > 0);
     int v, e;
@@ -371,22 +390,25 @@ void main_scc(const std::set<std::string>& options, const F& func)
     
     doOnce(edges);
 
-    std::mt19937 rng{std::random_device{}()};
-
-    for (int i = 0; i < 5; i++)
+    if (options.count("-sccv") > 0)
     {
-        auto lol = edges;
-        std::vector<DirectedGraph::vertex_t> permutation(v);
-        std::iota(permutation.begin(), permutation.end(), 0);
-        std::shuffle(permutation.begin(), permutation.end(), rng);
-        std::transform(lol.begin(), lol.end(), lol.begin(), [&](auto val)
-        {
-            val.first = permutation[val.first];
-            val.second = permutation[val.second];
+        std::mt19937 rng{std::random_device{}()};
 
-            return val;
-        });
-        doOnce(lol);
+        for (int i = 0; i < 5; i++)
+        {
+            auto lol = edges;
+            std::vector<DirectedGraph::vertex_t> permutation(v);
+            std::iota(permutation.begin(), permutation.end(), 0);
+            std::shuffle(permutation.begin(), permutation.end(), rng);
+            std::transform(lol.begin(), lol.end(), lol.begin(), [&](auto val)
+            {
+                val.first = permutation[val.first];
+                val.second = permutation[val.second];
+
+                return val;
+            });
+            doOnce(lol);
+        }
     }
 }
 

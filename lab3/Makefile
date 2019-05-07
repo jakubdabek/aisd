@@ -1,4 +1,4 @@
-CXXFLAGS := -std=c++2a -Wall -Wextra
+CXXFLAGS := -std=c++2a -Wall -Wextra -O2
 CXX := g++
 
 all: main
