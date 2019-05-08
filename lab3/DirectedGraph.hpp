@@ -7,7 +7,7 @@
 class DirectedGraph
 {
 public:
-    using weight_t = int;
+    using weight_t = double;
     using vertex_t = int;
     using distance_t = weight_t;
 

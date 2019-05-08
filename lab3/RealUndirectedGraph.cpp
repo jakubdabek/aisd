@@ -80,7 +80,7 @@ auto RealUndirectedGraph::kruskal() const -> std::pair<weight_t, std::vector<std
         {
             my_union(info_u, info_v);
             total_weight += w;
-            tree.emplace_back(u, v);
+            tree.emplace_back(u + 1, v + 1);
         }
     }
     
@@ -157,9 +157,9 @@ auto RealUndirectedGraph::prim(bool verbose) const -> std::pair<weight_t, std::v
 
         auto other = infos[i].parent;
         if (other < i)
-            tree.emplace_back(other, i);
+            tree.emplace_back(other + 1, i + 1);
         else
-            tree.emplace_back(i, other);
+            tree.emplace_back(i + 1, other + 1);
     }
 
     return { total_weight, std::move(tree) };

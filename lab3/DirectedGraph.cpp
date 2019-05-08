@@ -103,7 +103,7 @@ auto DirectedGraph::dijkstra(vertex_t source, bool verbose) const -> std::vector
                 current.has_value();
                 current = { current->second.get().previous, vertex_info[current->second.get().previous] })
             {
-                path.emplace_front(current->first);
+                path.emplace_front(current->first + 1);
                 if (current->first == current->second.get().previous)
                     break;
             }
@@ -232,7 +232,7 @@ auto DirectedGraph::tarjan(bool verbose) const -> std::vector<std::vector<vertex
             {
                 auto w = s.top(); s.pop();
                 infos[w].onStack = false;
-                scc.push_back(w);
+                scc.push_back(w + 1);
                 if (w == v)
                     break;
             }
