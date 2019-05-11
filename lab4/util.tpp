@@ -4,86 +4,6 @@
 #include <functional>
 #include <iostream>
 
-template<class T>
-class Swapper
-{
-public:
-    void swap(T& a, T& b);
-
-    int swaps() const noexcept
-    {
-        return _swaps;
-    }
-
-    void set_verbose(bool verbose) noexcept
-    {
-        _verbose = verbose;
-    }
-
-    void reset() noexcept
-    {
-        _swaps = 0;
-    }
-
-private:
-    int _swaps = 0;
-    bool _verbose = false;
-};
-
-template<class T>
-inline void Swapper<T>::swap(T& a, T& b)
-{
-    if (_verbose)
-        std::cerr << "Swapping " << a << " and " << b << std::endl;
-    _swaps++;
-    using std::swap;
-    swap(a, b);
-}
-
-template<class T>
-class Comparer
-{
-public:
-    using cmp_t = std::function<bool(const T&, const T&)>;
-
-    Comparer() : cmp{std::less<T>{}} {}
-    Comparer(cmp_t f) : cmp{std::move(f)} {}
-
-    bool compare(const T& a, const T& b);
-
-    int comparisons() const noexcept
-    {
-        return _comparisons;
-    }
-
-    void set_verbose(bool verbose) noexcept
-    {
-        _verbose = verbose;
-    }
-
-    void reset() noexcept
-    {
-        _comparisons = 0;
-    }
-
-private:
-    int _comparisons = 0;
-    bool _verbose = false;
-    std::function<bool(const T&, const T&)> cmp;
-};
-
-template<class T>
-inline bool Comparer<T>::compare(const T& a, const T& b)
-{
-    if (_verbose)
-        std::cerr << "Comparing " << a << " and " << b << std::endl;
-    _comparisons++;
-
-    return cmp(a, b);
-}
-#include <utility>
-#include <iostream>
-
 namespace impl {
     using std::begin;
     using std::end;
@@ -155,4 +75,82 @@ static std::ostream& maybe_stream(bool verbose, std::ostream& verbose_stream = s
 constexpr bool is_power_of_2(size_t value)
 {
     return (value & (value - 1)) == 0;
+}
+
+
+
+template<class T>
+class Swapper
+{
+public:
+    void swap(T& a, T& b) noexcept(std::is_nothrow_swappable_v<T>);
+
+    int swaps() const noexcept
+    {
+        return _swaps;
+    }
+
+    void set_verbose(bool verbose, std::ostream& os = std::cerr) noexcept
+    {
+        _os = maybe_stream(verbose, os);
+    }
+
+    void reset() noexcept
+    {
+        _swaps = 0;
+    }
+
+private:
+    int _swaps = 0;
+    std::reference_wrapper<std::ostream> _os{noop_stream};
+};
+
+template<class T>
+inline void Swapper<T>::swap(T& a, T& b) noexcept(std::is_nothrow_swappable_v<T>)
+{
+    _os.get() << "Swapping " << a << " and " << b << std::endl;
+    _swaps++;
+    using std::swap;
+    swap(a, b);
+}
+
+template<class T>
+class Comparer
+{
+public:
+    using cmp_t = std::function<bool(const T&, const T&) noexcept>;
+
+    Comparer() : _cmp{std::less<T>{}} {}
+    Comparer(cmp_t f) : _cmp{std::move(f)} {}
+
+    bool compare(const T& a, const T& b) noexcept;
+
+    int comparisons() const noexcept
+    {
+        return _comparisons;
+    }
+
+    void set_verbose(bool verbose, std::ostream& os = std::cerr) noexcept
+    {
+        _os = maybe_stream(verbose, os);
+    }
+
+    void reset() noexcept
+    {
+        _comparisons = 0;
+    }
+
+private:
+    int _comparisons = 0;
+    std::function<bool(const T&, const T&)> _cmp;
+    std::reference_wrapper<std::ostream> _os{noop_stream};
+};
+
+template<class T>
+inline bool Comparer<T>::compare(const T& a, const T& b) noexcept
+{
+    _os.get() << "Comparing " << a << " and " << b << std::endl;
+    _comparisons++;
+
+    return _cmp(a, b);
 }

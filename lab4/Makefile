@@ -3,7 +3,7 @@ CXX := g++
 
 all: main
 
-main: main.cpp BinarySearchTree.tpp util.tpp
+main: main.cpp BinarySearchTree.tpp TreeUtil.hpp util.tpp
 	$(CXX) $(CXXFLAGS) -o $@ $(filter-out %.tpp, $(filter-out %.hpp,$^)) $(LDXXFLAGS)
 
 clean:

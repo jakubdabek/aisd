@@ -1,6 +1,7 @@
 #pragma once
 
 #include "util.tpp"
+#include "TreeUtil.hpp"
 
 #include <memory>
 #include <utility>
@@ -17,7 +18,7 @@ private:
         T value;
         std::unique_ptr<Node> left, right;
 
-        static bool search(const Node *node, const T& value, Comparer<T>& cmp)
+        static bool search(const Node *node, const T& value, Comparer<T>& cmp) noexcept
         {
             if (!node)
             {
@@ -38,7 +39,7 @@ private:
             }
         }
 
-        static std::unique_ptr<Node>& max_node(std::unique_ptr<Node>& node)
+        static std::unique_ptr<Node>& max_node(std::unique_ptr<Node>& node) noexcept
         {
             if (node->right)
                 return max_node(node->right);
@@ -104,28 +105,16 @@ private:
                 return false;
             }
         }
-
-        static std::ostream& inorder(const Node *node, std::ostream& os)
-        {
-            if (node)
-            {
-                inorder(node->left.get(), os);
-                os << node->value << " ";
-                inorder(node->right.get(), os);
-            }
-
-            return os;
-        }
     };
 
     std::unique_ptr<Node> root;
-    Comparer<T> cmp;
+    mutable Comparer<T> cmp;
 public:
     BinarySearchTree() : cmp() {}
     BinarySearchTree(Comparer<T>& cmp) : cmp(cmp) {}
     const Comparer<T>& comparer() const { return cmp; }
 
-    bool insert(const T& value)
+    bool insert(const T& value) noexcept(std::is_nothrow_copy_constructible_v<T>)
     {
         return Node::insert(root, value, cmp);
     }
@@ -135,49 +124,18 @@ public:
         return Node::remove(root, value, cmp);
     }
 
-    bool search(const T& value)
+    bool search(const T& value) const noexcept
     {
         return Node::search(root.get(), value, cmp);
     }
 
-    std::ostream& inorder(std::ostream& os)
+    std::ostream& inorder(std::ostream& os) const noexcept
     {
-        return Node::inorder(root.get(), os);
+        return TreeUtil::inorder(root.get(), os);
     }
 
-    std::ostream& levelorder(std::ostream& os)
+    std::ostream& levelorder(std::ostream& os) const noexcept
     {
-        std::queue<std::reference_wrapper<const std::unique_ptr<Node>>> q;
-        q.emplace(root);
-        int i = 2;
-        bool something = false;
-        while (!q.empty())
-        {
-            auto node = q.front();
-            q.pop();
-            if (node.get())
-            {
-                os << node.get()->value << " ";
-                auto l = q.emplace(node.get()->left);
-                auto r = q.emplace(node.get()->right);
-                something = l.get() || r.get();
-            }
-            else
-            {
-                os << "_ ";
-                q.emplace(node);
-                q.emplace(node);
-            }
-            if (is_power_of_2(i++))
-            {
-                std::cout << "\n";
-                if (something)
-                    something = false;
-                else
-                    break;
-            }
-        }
-
-        return os;
+        return TreeUtil::levelorder(os, root.get());
     }
 };
