@@ -22,7 +22,7 @@ namespace TreeUtil {
                 os << node->value << " ";
                 auto l = q.emplace(node->left.get());
                 auto r = q.emplace(node->right.get());
-                something = l || r;
+                something = something || l || r;
             }
             else
             {
