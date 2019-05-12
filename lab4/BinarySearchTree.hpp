@@ -131,7 +131,7 @@ public:
 
     std::ostream& inorder(std::ostream& os) const noexcept
     {
-        return TreeUtil::inorder(root.get(), os);
+        return TreeUtil::inorder(os, root.get());
     }
 
     std::ostream& levelorder(std::ostream& os) const noexcept

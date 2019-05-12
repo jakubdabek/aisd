@@ -42,15 +42,15 @@ namespace TreeUtil {
 
         return os;
     }
-    
+
     template<class Node>
-    std::ostream& inorder(const Node *node, std::ostream& os) noexcept
+    std::ostream& inorder(std::ostream& os, const Node *node) noexcept
     {
         if (node)
         {
-            inorder(node->left.get(), os);
+            inorder(os, node->left.get());
             os << node->value << " ";
-            inorder(node->right.get(), os);
+            inorder(os, node->right.get());
         }
 
         return os;
