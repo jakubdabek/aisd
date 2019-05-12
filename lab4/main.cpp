@@ -1,5 +1,5 @@
-#include "BinarySearchTree.tpp"
-#include "util.tpp"
+#include "BinarySearchTree.hpp"
+#include "util.hpp"
 
 #include <iostream>
 #include <sstream>
