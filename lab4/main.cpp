@@ -1,4 +1,5 @@
 #include "BinarySearchTree.hpp"
+#include "RedBlackTree.hpp"
 #include "util.hpp"
 
 #include <iostream>
@@ -167,9 +168,9 @@ void main_bst(const std::set<std::string>& options)
     main_tree<BinarySearchTree>(options);
 }
 
-void main_rbt(const std::set<std::string>&)
+void main_rbt(const std::set<std::string>& options)
 {
-    // main_tree<RedBlackTree>(options);
+    main_tree<RedBlackTree>(options);
 }
 
 void main_splay(const std::set<std::string>&)

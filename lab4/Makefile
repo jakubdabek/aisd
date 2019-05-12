@@ -1,9 +1,15 @@
-CXXFLAGS := -std=c++2a -Wall -Wextra -O2
+CXXFLAGS := -std=c++2a -Wall -Wextra
 CXX := g++
 
 all: main
 
-main: main.cpp BinarySearchTree.hpp TreeUtil.hpp util.hpp
+optimized: CXXFLAGS+=-O2
+optimized: all
+
+debug: CXXFLAGS+=-O0 -g
+debug:all
+
+main: main.cpp BinarySearchTree.hpp RedBlackTree.hpp TreeUtil.hpp util.hpp
 	$(CXX) $(CXXFLAGS) -o $@ $(filter-out %.tpp, $(filter-out %.hpp,$^)) $(LDXXFLAGS)
 
 clean:
