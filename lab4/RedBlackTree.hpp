@@ -14,15 +14,33 @@ private:
     struct Node
     {
         enum class Color { Red, Black };
+        friend std::ostream& operator<<(std::ostream& os, Color c)
+        {
+            return os << (c == Color::Red ? "R" : "B");
+        }
+
         enum class Direction { Left, Right };
+
+        explicit Node(const T& value) : value(value), color(Color::Red) {}
 
         T value;
         Color color;
-        std::shared_ptr<Node> left, right;
-        std::weak_ptr<Node> parent;
+        std::unique_ptr<Node> left, right;
+
+        friend std::ostream& operator<<(std::ostream& os, const Node& node)
+        {
+            return os << "(" << node.value << ", " << node.color << ")";
+        }
+
+        constexpr static bool is_red(const Node *node) noexcept { return node && node->color == Color::Red; }
+
+        constexpr static Direction invert_direction(Direction dir) noexcept
+        {
+            return dir == Direction::Left ? Direction::Right : Direction::Left;
+        }
 
         // returns the direction of the comparison with node's value (empty if values are equivalent)
-        static std::optional<Direction> direction(const Node& node, const T& value, Comparer<T>& cmp)
+        static std::optional<Direction> direction(const Node& node, const T& value, Comparer<T>& cmp) noexcept
         {
             if (cmp.compare(value, node.value))
                 return Direction::Left;
@@ -31,28 +49,28 @@ private:
             return std::nullopt;
         }
 
-        static std::shared_ptr<Node>& child(Node& node, Direction direction) noexcept
+        static std::unique_ptr<Node>& child(Node& node, Direction direction) noexcept
         {
             if (direction == Direction::Left)
                 return node.left;
             return node.right;
         }
 
-        static const std::shared_ptr<Node>& child(const Node& node, Direction direction) noexcept
+        static const std::unique_ptr<Node>& child(const Node& node, Direction direction) noexcept
         {
             if (direction == Direction::Left)
                 return node.left;
             return node.right;
         }
 
-        static std::shared_ptr<Node>& other_child(Node& node, Direction direction) noexcept
+        static std::unique_ptr<Node>& other_child(Node& node, Direction direction) noexcept
         {
             if (direction == Direction::Left)
                 return node.right;
             return node.left;
         }
 
-        static const std::shared_ptr<Node>& other_child(const Node& node, Direction direction) noexcept
+        static const std::unique_ptr<Node>& other_child(const Node& node, Direction direction) noexcept
         {
             if (direction == Direction::Left)
                 return node.right;
@@ -69,24 +87,24 @@ private:
             return !dir.has_value() || search(child(*node, *dir).get(), value, cmp);
         }
 
-        static void rotate_single(std::shared_ptr<Node>& node, Direction dir) noexcept
+        static void rotate_single(std::unique_ptr<Node>& node, Direction dir) noexcept
         {
             auto save = std::move(other_child(node, dir));
             other_child(node, dir) = std::move(child(save, dir));
             child(save, dir) = std::move(save);
         }
 
-        static bool remove(std::shared_ptr<Node>& node, const T& value, Comparer<T>& cmp)
+        static bool remove(std::unique_ptr<Node>& node, const T& value, Comparer<T>& cmp)
         {
             return false;
         }
 
-        static bool insert(std::shared_ptr<Node>& node, const T& value, Comparer<T>& cmp)
+        static bool insert(std::unique_ptr<Node>& root, const T& value, Comparer<T>& cmp)
         {
             return false;
         }
     };
-    std::shared_ptr<Node> root;
+    std::unique_ptr<Node> root;
     mutable Comparer<T> cmp;
 public:
     RedBlackTree() : cmp() {}

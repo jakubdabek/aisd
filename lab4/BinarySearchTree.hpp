@@ -14,9 +14,14 @@ class BinarySearchTree
 private:
     struct Node
     {
-        Node(const T& value) : value(value) {}
+        explicit Node(const T& value) : value(value) {}
         T value;
         std::unique_ptr<Node> left, right;
+
+        friend std::ostream& operator<<(std::ostream& os, const Node& node)
+        {
+            return os << node.value;
+        }
 
         static bool search(const Node *node, const T& value, Comparer<T>& cmp) noexcept
         {

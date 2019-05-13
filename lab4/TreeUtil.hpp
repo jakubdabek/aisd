@@ -19,7 +19,7 @@ namespace TreeUtil {
             q.pop();
             if (node)
             {
-                os << node->value << " ";
+                os << *node << " ";
                 auto l = q.emplace(node->left.get());
                 auto r = q.emplace(node->right.get());
                 something = something || l || r;
