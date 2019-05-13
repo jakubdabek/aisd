@@ -89,9 +89,13 @@ private:
 
         static void rotate_single(std::unique_ptr<Node>& node, Direction dir) noexcept
         {
-            auto save = std::move(other_child(node, dir));
-            other_child(node, dir) = std::move(child(save, dir));
-            child(save, dir) = std::move(save);
+            if (!node || !other_child(*node, dir))
+                return;
+
+            auto save = std::move(node);
+            node = std::move(other_child(*save, dir));
+            other_child(*save, dir) = std::move(child(*node, dir));
+            child(*node, dir) = std::move(save);
         }
 
         static bool remove(std::unique_ptr<Node>& node, const T& value, Comparer<T>& cmp)
