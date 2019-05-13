@@ -103,9 +103,65 @@ private:
             return false;
         }
 
+        struct insert_impl_ret { bool inserted, fix; };
+        static insert_impl_ret insert_impl(std::unique_ptr<Node>& node, const T& value, Comparer<T>& cmp)
+        {
+            if (!node)
+            {
+                node = std::make_unique<Node>(value);
+                return { true, true };
+            }
+
+            const auto dir = direction(*node, value, cmp);
+            if (!dir.has_value())
+                return { false, false };
+
+            auto& dir_child = child(*node, *dir);
+            const auto ret = insert_impl(dir_child, value, cmp);
+
+            if (!ret.fix)
+                return ret;
+
+            if (is_red(dir_child.get()))
+            {
+                auto& other_dir_child = other_child(*node, *dir);
+                if (is_red(other_dir_child.get()))
+                {
+                    node->color = Color::Red;
+                    dir_child->color = Color::Black;
+                    other_dir_child->color = Color::Black;
+
+                    return ret;
+                }
+                else if (!is_red(node.get()))
+                {
+                    if (!is_red(child(*dir_child, *dir).get()))
+                    {
+                        rotate_single(dir_child, *dir);
+                    }
+
+                    node->color = Color::Red;
+                    rotate_single(node, invert_direction(*dir));
+                    node->color = Color::Black;
+
+                    return { ret.inserted, false };
+                }
+                else
+                {
+                    return ret;
+                }
+            }
+
+            return { ret.inserted, false };
+        }
+
         static bool insert(std::unique_ptr<Node>& root, const T& value, Comparer<T>& cmp)
         {
-            return false;
+            auto ret = insert_impl(root, value, cmp).inserted;
+            if (ret)
+                root->color = Color::Black;
+
+            return ret;
         }
     };
     std::unique_ptr<Node> root;
