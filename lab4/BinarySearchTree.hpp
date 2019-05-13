@@ -44,13 +44,6 @@ private:
             }
         }
 
-        static std::unique_ptr<Node>& max_node(std::unique_ptr<Node>& node) noexcept
-        {
-            if (node->right)
-                return max_node(node->right);
-            return node;
-        }
-
         static bool remove(std::unique_ptr<Node>& node, const T& value, Comparer<T>& cmp)
         {
             if (!node)
@@ -80,7 +73,7 @@ private:
                 }
 
                 // has both left and right nodes
-                auto& swapped = max_node(node->left);
+                auto& swapped = TreeUtil::max_node(node->left);
                 using std::swap;
                 swap(swapped->value, node->value);
                 remove(swapped, value, cmp);

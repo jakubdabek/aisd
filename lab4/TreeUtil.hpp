@@ -7,7 +7,7 @@
 namespace TreeUtil {
 
     template<class Node>
-    std::ostream& levelorder(std::ostream& os, const Node *root) noexcept
+    inline std::ostream& levelorder(std::ostream& os, const Node *root) noexcept
     {
         std::queue<const Node*> q;
         q.emplace(root);
@@ -44,7 +44,7 @@ namespace TreeUtil {
     }
 
     template<class Node>
-    std::ostream& inorder(std::ostream& os, const Node *node) noexcept
+    inline std::ostream& inorder(std::ostream& os, const Node *node) noexcept
     {
         if (node)
         {
@@ -54,5 +54,13 @@ namespace TreeUtil {
         }
 
         return os;
+    }
+
+    template<class NodePtr>
+    inline NodePtr& max_node(NodePtr& node) noexcept
+    {
+        if (node->right)
+            return max_node(node->right);
+        return node;
     }
 }
