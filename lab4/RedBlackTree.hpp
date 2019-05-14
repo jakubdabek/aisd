@@ -98,9 +98,125 @@ private:
             child(*node, dir) = std::move(save);
         }
 
-        static bool remove(std::unique_ptr<Node>& node, const T& value, Comparer<T>& cmp)
+        static bool remove_impl_balance(std::unique_ptr<Node>& node, Direction dir)
         {
-            return false;
+            auto& s = other_child(*node, dir);
+
+            if (is_red(s.get()))
+            {
+                node->color = Color::Red;
+                rotate_single(node, dir);
+                node->color = Color::Black;
+
+                return remove_impl_balance(child(*node, dir), dir);
+            }
+
+            if (!s)
+                return true;
+
+            if (!is_red(s->left.get()) && !is_red(s->right.get()))
+            {
+                bool fix = true;
+                if (is_red(node.get()))
+                {
+                    fix = false;
+                }
+
+                node->color = Color::Black;
+                s->color = Color::Red;
+
+                return fix;
+            }
+            else
+            {
+                auto save = node->color;
+                if (is_red(other_child(*s, dir).get()))
+                {
+                    // node->color = Color::Red;
+                    rotate_single(node, dir);
+                    // node->color = Color::Black;
+                }
+                else
+                {
+                    s->color = Color::Red;
+                    rotate_single(s, invert_direction(dir));
+                    // node->color = Color::Red;
+                    rotate_single(node, dir);
+                    // node->color = Color::Black;
+                }
+
+                node->color = save;
+                //auto& p = child(*node, dir);
+                if (node->left)
+                    node->left->color = Color::Black;
+                if (node->right)
+                    node->right->color = Color::Black;
+
+                return false;
+            }
+        }
+
+        struct remove_impl_ret { bool removed, fix; };
+        static remove_impl_ret remove_impl(std::unique_ptr<Node>& node, const T& value, Comparer<T>& cmp)
+        {
+            if (!node)
+                return { false, false };
+
+            auto dir = direction(*node, value, cmp);
+
+            if (!dir.has_value())
+            {
+                if (!node->left || !node->right)
+                {
+                    auto& save = [&]()->auto& {
+                        if (!node->left)
+                            return node->right;
+                        else
+                            return node->left;
+                    }();
+
+                    auto fix = true;
+
+                    if (is_red(node.get()))
+                    {
+                        fix = false;
+                    }
+                    else if (is_red(save.get()))
+                    {
+                        if (save)
+                            save->color = Color::Black;
+                        fix = false;
+                    }
+
+                    node = std::move(save);
+                    return { true, fix };
+                }
+                else
+                {
+                    auto& swapped = TreeUtil::max_node(node->left);
+                    using std::swap;
+                    swap(swapped->value, node->value);
+                    dir = Direction::Left;
+                }
+            }
+
+            auto [removed, fix] = remove_impl(child(*node, *dir), value, cmp);
+
+            if (fix)
+            {
+                fix = remove_impl_balance(node, *dir);
+            }
+
+            return { removed, fix };
+        }
+
+        static bool remove(std::unique_ptr<Node>& root, const T& value, Comparer<T>& cmp)
+        {
+            auto ret = remove_impl(root, value, cmp).removed;
+            if (ret && root)
+                root->color = Color::Black;
+
+            return ret;
         }
 
         struct insert_impl_ret { bool inserted, fix; };
