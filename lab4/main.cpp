@@ -3,6 +3,7 @@
 #include "util.hpp"
 
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <numeric>
 #include <random>
@@ -59,10 +60,10 @@ int main(int argc, char *argv[])
     
 }
 
-template<template<class> class Tree>
+template<template<class> class Tree, class T = int>
 void main_tree(const std::set<std::string>&)
 {
-    Tree<int> bst;
+    Tree<T> bst;
     int ops;
     std::cout << "Enter number of operations\n";
     if (!(std::cin >> ops))
@@ -107,6 +108,25 @@ void main_tree(const std::set<std::string>&)
             }
         },
         {
+            "load",
+            [&]
+            {
+                std::string filename;
+                if (!(std::cin >> filename))
+                    return false;
+                std::ifstream file{filename};
+                if (!file.is_open())
+                {
+                    std::cout << "Couldn't open file\n";
+                    return true;
+                }
+                T value;
+                while (file >> value)
+                    bst.insert(value);
+                return true;
+            }
+        },
+        {
             "inorder",
             [&]
             {
@@ -131,6 +151,7 @@ void main_tree(const std::set<std::string>&)
                           << " delete x |"
                           << " search x |"
                           << " inorder |"
+                          << " load filename |"
                           << " help\n";
                 return true;
             }
