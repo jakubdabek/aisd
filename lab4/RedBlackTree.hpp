@@ -21,11 +21,13 @@ private:
 
         enum class Direction { Left, Right };
 
+        using ptr_t = std::unique_ptr<Node>;
+
         explicit Node(const T& value) : value(value), color(Color::Red) {}
 
         T value;
         Color color;
-        std::unique_ptr<Node> left, right;
+        ptr_t left, right;
 
         friend std::ostream& operator<<(std::ostream& os, const Node& node)
         {
@@ -49,28 +51,28 @@ private:
             return std::nullopt;
         }
 
-        static std::unique_ptr<Node>& child(Node& node, Direction direction) noexcept
+        static ptr_t& child(Node& node, Direction direction) noexcept
         {
             if (direction == Direction::Left)
                 return node.left;
             return node.right;
         }
 
-        static const std::unique_ptr<Node>& child(const Node& node, Direction direction) noexcept
+        static const ptr_t& child(const Node& node, Direction direction) noexcept
         {
             if (direction == Direction::Left)
                 return node.left;
             return node.right;
         }
 
-        static std::unique_ptr<Node>& other_child(Node& node, Direction direction) noexcept
+        static ptr_t& other_child(Node& node, Direction direction) noexcept
         {
             if (direction == Direction::Left)
                 return node.right;
             return node.left;
         }
 
-        static const std::unique_ptr<Node>& other_child(const Node& node, Direction direction) noexcept
+        static const ptr_t& other_child(const Node& node, Direction direction) noexcept
         {
             if (direction == Direction::Left)
                 return node.right;
@@ -87,7 +89,7 @@ private:
             return !dir.has_value() || search(child(*node, *dir).get(), value, cmp);
         }
 
-        static void rotate_single(std::unique_ptr<Node>& node, Direction dir) noexcept
+        static void rotate_single(ptr_t& node, Direction dir) noexcept
         {
             if (!node || !other_child(*node, dir))
                 return;
@@ -98,7 +100,7 @@ private:
             child(*node, dir) = std::move(save);
         }
 
-        static bool remove_impl_balance(std::unique_ptr<Node>& node, Direction dir)
+        static bool remove_impl_balance(ptr_t& node, Direction dir)
         {
             auto& s = other_child(*node, dir);
 
@@ -157,7 +159,7 @@ private:
         }
 
         struct remove_impl_ret { bool removed, fix; };
-        static remove_impl_ret remove_impl(std::unique_ptr<Node>& node, const T& value, Comparer<T>& cmp)
+        static remove_impl_ret remove_impl(ptr_t& node, const T& value, Comparer<T>& cmp)
         {
             if (!node)
                 return { false, false };
@@ -210,7 +212,7 @@ private:
             return { removed, fix };
         }
 
-        static bool remove(std::unique_ptr<Node>& root, const T& value, Comparer<T>& cmp)
+        static bool remove(ptr_t& root, const T& value, Comparer<T>& cmp)
         {
             auto ret = remove_impl(root, value, cmp).removed;
             if (ret && root)
@@ -220,7 +222,7 @@ private:
         }
 
         struct insert_impl_ret { bool inserted, fix; };
-        static insert_impl_ret insert_impl(std::unique_ptr<Node>& node, const T& value, Comparer<T>& cmp)
+        static insert_impl_ret insert_impl(ptr_t& node, const T& value, Comparer<T>& cmp)
         {
             if (!node)
             {
@@ -271,7 +273,7 @@ private:
             return { ret.inserted, false };
         }
 
-        static bool insert(std::unique_ptr<Node>& root, const T& value, Comparer<T>& cmp)
+        static bool insert(ptr_t& root, const T& value, Comparer<T>& cmp)
         {
             auto ret = insert_impl(root, value, cmp).inserted;
             if (ret)
@@ -280,7 +282,8 @@ private:
             return ret;
         }
     };
-    std::unique_ptr<Node> root;
+
+    typename Node::ptr_t root;
     mutable Comparer<T> cmp;
 public:
     RedBlackTree() : cmp() {}

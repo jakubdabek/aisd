@@ -5,7 +5,6 @@
 
 #include <memory>
 #include <utility>
-#include <queue>
 
 
 template<class T>
@@ -14,9 +13,11 @@ class BinarySearchTree
 private:
     struct Node
     {
+        using ptr_t = std::unique_ptr<Node>;
+
         explicit Node(const T& value) : value(value) {}
         T value;
-        std::unique_ptr<Node> left, right;
+        ptr_t left, right;
 
         friend std::ostream& operator<<(std::ostream& os, const Node& node)
         {
@@ -44,7 +45,7 @@ private:
             }
         }
 
-        static bool remove(std::unique_ptr<Node>& node, const T& value, Comparer<T>& cmp)
+        static bool remove(ptr_t& node, const T& value, Comparer<T>& cmp)
         {
             if (!node)
             {
@@ -80,7 +81,7 @@ private:
             }
         }
 
-        static bool insert(std::unique_ptr<Node>& node, const T& value, Comparer<T>& cmp)
+        static bool insert(ptr_t& node, const T& value, Comparer<T>& cmp)
         {
             if (!node)
             {
@@ -103,7 +104,7 @@ private:
         }
     };
 
-    std::unique_ptr<Node> root;
+    typename Node::ptr_t root;
     mutable Comparer<T> cmp;
 public:
     BinarySearchTree() : cmp() {}
