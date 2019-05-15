@@ -1,6 +1,7 @@
 #pragma once
 
 #include "util.hpp"
+#include "TreeUtil.hpp"
 
 #include <optional>
 #include <memory>
