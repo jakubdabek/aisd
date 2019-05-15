@@ -76,9 +76,7 @@ private:
                 auto& swapped = TreeUtil::max_node(node->left);
                 using std::swap;
                 swap(swapped->value, node->value);
-                remove(swapped, value, cmp);
-
-                return true;
+                return remove(swapped, value, cmp);
             }
         }
 
