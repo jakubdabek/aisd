@@ -9,7 +9,7 @@ optimized: all
 debug: CXXFLAGS+=-O0 -g
 debug:all
 
-main: main.cpp BinarySearchTree.hpp RedBlackTree.hpp TreeUtil.hpp util.hpp
+main: main.cpp BinarySearchTree.hpp RedBlackTree.hpp SplayTree.hpp TreeUtil.hpp util.hpp
 	$(CXX) $(CXXFLAGS) -o $@ $(filter-out %.tpp, $(filter-out %.hpp,$^)) $(LDXXFLAGS)
 
 clean:
