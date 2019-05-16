@@ -306,6 +306,12 @@ public:
         return Node::search(root.get(), value, cmp);
     }
 
+    void clear() noexcept
+    {
+        while (root)
+            remove(root->value);
+    }
+
     std::ostream& inorder(std::ostream& os) const noexcept
     {
         return TreeUtil::inorder(os, root.get());

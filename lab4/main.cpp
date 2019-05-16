@@ -127,6 +127,14 @@ void main_tree(const std::set<std::string>&)
             }
         },
         {
+            "clear",
+            [&]
+            {
+                bst.clear();
+                return true;
+            }
+        },
+        {
             "inorder",
             [&]
             {
@@ -152,6 +160,7 @@ void main_tree(const std::set<std::string>&)
                           << " search x |"
                           << " inorder |"
                           << " load filename |"
+                          << " clear |"
                           << " help\n";
                 return true;
             }
