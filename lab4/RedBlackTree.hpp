@@ -241,7 +241,7 @@ private:
             if (!ret.fix)
                 return ret;
 
-            if (is_red(dir_child.get()))
+            if (is_red(dir_child.get()))// && (is_red(dir_child->left.get()) || is_red(dir_child->right.get())))
             {
                 auto& other_dir_child = other_child(*node, *dir);
                 if (is_red(other_dir_child.get()))
@@ -252,21 +252,26 @@ private:
 
                     return ret;
                 }
-                else if (!is_red(node.get()))
-                {
-                    if (!is_red(child(*dir_child, *dir).get()))
-                    {
-                        rotate_single(dir_child, *dir);
-                    }
-
-                    node->color = Color::Red;
-                    rotate_single(node, invert_direction(*dir));
-                    node->color = Color::Black;
-
-                    return { ret.inserted, false };
-                }
                 else
                 {
+                    if (is_red(child(*dir_child, *dir).get()))
+                    {
+                        node->color = Color::Red;
+                        rotate_single(node, invert_direction(*dir));
+                        node->color = Color::Black;
+                        return { ret.inserted, false };
+                    }
+                    else if (is_red(other_child(*dir_child, *dir).get()))
+                    {
+                        dir_child->color = Color::Red;
+                        rotate_single(dir_child, *dir);
+                        dir_child->color = Color::Black;
+                        node->color = Color::Red;
+                        rotate_single(node, invert_direction(*dir));
+                        node->color = Color::Black;
+                        return { ret.inserted, false };
+                    }
+
                     return ret;
                 }
             }
@@ -281,6 +286,49 @@ private:
                 root->color = Color::Black;
 
             return ret;
+        }
+
+        static std::pair<int, bool> check_impl(const Node *node, Comparer<T>& cmp)
+        {
+            if (!node)
+                return { 1, true };
+
+            auto [left_height, left_correct_height] = check_impl(node->left.get(), cmp);
+            auto [right_height, right_correct_height] = check_impl(node->right.get(), cmp);
+
+            if (node->left && !cmp.compare(node->left->value, node->value))
+            {
+                std::cerr << "BST violation for left at " << *node << " left=" << (*node->left) << std::endl;
+            }
+            if (node->right && !cmp.compare(node->value, node->right->value))
+            {
+                std::cerr << "BST violation for right at " << *node << " right=" << (*node->right) << std::endl;
+            }
+
+            bool correct_heights = left_correct_height && right_correct_height;
+
+            if (left_height != right_height && correct_heights)
+            {
+                std::cerr << "Black violation at " << *node << std::endl;
+                correct_heights = false;
+            }
+
+            if (is_red(node))
+            {
+                if (is_red(node->left.get()) || is_red(node->right.get()))
+                    std::cerr << "Red violation at " << *node << std::endl;
+
+                return { left_height, correct_heights };
+            }
+            else
+            {
+                return { left_height + 1, correct_heights };
+            }
+        }
+
+        static bool check(const Node *root, Comparer<T> cmp) // copy comparer
+        {
+            return check_impl(root, cmp).second;
         }
     };
 
@@ -320,5 +368,10 @@ public:
     std::ostream& levelorder(std::ostream& os) const noexcept
     {
         return TreeUtil::levelorder(os, root.get());
+    }
+
+    bool check() noexcept
+    {
+        return Node::check(root.get(), cmp);
     }
 };
