@@ -63,4 +63,30 @@ namespace TreeUtil {
             return max_node(node->right);
         return node;
     }
+
+    template<class Node, class T>
+    static bool check(const Node *node, Comparer<T>& cmp)
+    {
+        if (!node)
+            return true;
+
+        if (!check(node->left.get(), cmp))
+            return false;
+        if (!check(node->right.get(), cmp))
+            return false;
+
+        bool correct = true;
+        if (node->left && !cmp.compare(node->left->value, node->value))
+        {
+            std::cerr << "BST violation for left at " << *node << " left=" << (*node->left) << std::endl;
+            correct = false;
+        }
+        if (node->right && !cmp.compare(node->value, node->right->value))
+        {
+            std::cerr << "BST violation for right at " << *node << " right=" << (*node->right) << std::endl;
+            correct = false;
+        }
+
+        return correct;
+    }
 }

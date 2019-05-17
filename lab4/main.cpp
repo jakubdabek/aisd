@@ -1,3 +1,7 @@
+#ifndef TYPE
+ #define TYPE std::string
+#endif
+
 #include "BinarySearchTree.hpp"
 #include "RedBlackTree.hpp"
 #include "SplayTree.hpp"
@@ -61,7 +65,7 @@ int main(int argc, char *argv[])
     
 }
 
-template<template<class> class Tree, class T = int>
+template<template<class> class Tree, class T = TYPE>
 void main_tree(const std::set<std::string>&)
 {
     Tree<T> bst;
@@ -73,16 +77,92 @@ void main_tree(const std::set<std::string>&)
         return;
     }
 
+    auto load_and = [&](auto&& F)
+    {
+        std::string filename;
+        if (!(std::cin >> filename))
+            return false;
+        std::ifstream file{filename};
+        if (!file.is_open())
+        {
+            std::cout << "Couldn't open file\n";
+            return true;
+        }
+        T value;
+        int counter = 0;
+        while (file >> value)
+        {
+            std::invoke(F, value);
+            if (++counter % 100 == 0)
+                std::cout << "Loaded " << counter << " values\n";
+        }
+        return true;
+    };
+
+    int current_size = 0;
+    int max_size = current_size;
+    int insert_count = 0;
+    const auto do_insert = [&](const T& value)
+    {
+        bool inserted = bst.insert(value);
+        // if (!bst.check())
+        //     std::cerr << "ERROR" << std::endl;
+        if (inserted)
+        {
+            current_size++;
+            if (current_size > max_size)
+                max_size = current_size;
+        }
+        insert_count++;
+
+        return inserted;
+    };
+
+    int search_count = 0;
+    const auto do_search = [&](const T& value)
+    {
+        bool found = bst.search(value);
+        // if (!bst.check())
+        //     std::cerr << "ERROR" << std::endl;
+        search_count++;
+
+        return found;
+    };
+
+    int delete_count = 0;
+    const auto do_delete = [&](const T& value)
+    {
+        bool deleted = bst.remove(value);
+        // if (!bst.check())
+        //     std::cerr << "ERROR" << std::endl;
+        if (deleted)
+        {
+            current_size--;
+            if (current_size < 0)
+                throw std::logic_error("size negative");
+        }
+        delete_count++;
+
+        return deleted;
+    };
+
+    int inorder_count = 0;
+    const auto do_inorder = [&](std::ostream& os)->std::ostream&
+    {
+        inorder_count++;
+        return bst.inorder(os);
+    };
+
     std::unordered_map<std::string, std::function<bool()>> operations
     {
         {
             "insert",
             [&]
             {
-                int value;
+                T value;
                 if (!(std::cin >> value))
                     return false;
-                bst.insert(value);
+                do_insert(value);
                 return true;
             }
         },
@@ -90,10 +170,10 @@ void main_tree(const std::set<std::string>&)
             "delete",
             [&]
             {
-                int value;
+                T value;
                 if (!(std::cin >> value))
                     return false;
-                bst.remove(value);
+                do_delete(value);
                 return true;
             }
         },
@@ -101,10 +181,10 @@ void main_tree(const std::set<std::string>&)
             "search",
             [&]
             {
-                int value;
+                T value;
                 if (!(std::cin >> value))
                     return false;
-                std::cout << bst.search(value) << std::endl;
+                std::cout << do_search(value) << std::endl;
                 return true;
             }
         },
@@ -112,19 +192,24 @@ void main_tree(const std::set<std::string>&)
             "load",
             [&]
             {
-                std::string filename;
-                if (!(std::cin >> filename))
-                    return false;
-                std::ifstream file{filename};
-                if (!file.is_open())
+                return load_and(do_insert);
+            }
+        },
+        {
+            "load_search",
+            [&]
+            {
+                return load_and([&](const T& value)
                 {
-                    std::cout << "Couldn't open file\n";
-                    return true;
-                }
-                T value;
-                while (file >> value)
-                    bst.insert(value);
-                return true;
+                    std::cout << value << " " << do_search(value) << std::endl;
+                });
+            }
+        },
+        {
+            "load_delete",
+            [&]
+            {
+                return load_and(do_delete);
             }
         },
         {
@@ -136,10 +221,18 @@ void main_tree(const std::set<std::string>&)
             }
         },
         {
+            "size",
+            [&]
+            {
+                std::cout << current_size << std::endl;
+                return true;
+            }
+        },
+        {
             "inorder",
             [&]
             {
-                bst.inorder(std::cout) << std::endl;
+                do_inorder(std::cout) << std::endl;
                 return true;
             }
         },
@@ -161,6 +254,8 @@ void main_tree(const std::set<std::string>&)
                           << " search x |"
                           << " inorder |"
                           << " load filename |"
+                          << " load_search filename |"
+                          << " load_delete filename |"
                           << " clear |"
                           << " help\n";
                 return true;
@@ -170,13 +265,15 @@ void main_tree(const std::set<std::string>&)
 
     operations.at("help")();
 
+    auto start_time = std::chrono::high_resolution_clock::now();
+
     for (int i = 0; i < ops || ops < 0; i++)
     {
         std::string op;
         
         std::cin.clear();
         if (!(std::cin >> op))
-            return;
+            break;
 
         if (auto o = operations.find(op); o != operations.end())
         {
@@ -192,6 +289,17 @@ void main_tree(const std::set<std::string>&)
             std::cout << "Wrong operation\n";
         }
     }
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(end_time - start_time).count() << "ms" << std::endl;
+
+    std::cout << "Number of insertions: " << insert_count << std::endl;
+    std::cout << "Number of searches: " << search_count << std::endl;
+    std::cout << "Number of deletions: " << delete_count << std::endl;
+    std::cout << "Number of inorders: " << inorder_count << std::endl;
+    std::cout << "Number of comparisons: " << bst.comparer().comparisons() << std::endl;
+    std::cout << "Max size: " << max_size << std::endl;
+    std::cout << "Current size: " << current_size << std::endl;
 }
 
 void main_bst(const std::set<std::string>& options)

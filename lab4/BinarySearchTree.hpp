@@ -142,6 +142,12 @@ public:
         return TreeUtil::levelorder(os, root.get());
     }
 
+    bool check()
+    {
+        auto tmp = cmp;
+        return TreeUtil::check(root.get(), tmp);
+    }
+
     ~BinarySearchTree()
     {
         clear();
