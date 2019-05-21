@@ -21,17 +21,6 @@ clean:
 	$(RM) *.o main
 
 test:
-	for i in sample lotr wordlist KJB; do\
-		./main --type rbt < data/operations_$$i.txt > io/out_$$i-rbt.txt 2> io/err_$$i-rbt.txt;\
-		./main --type splay < data/operations_$$i.txt > io/out_$$i-splay.txt 2> io/err_$$i-splay.txt;\
-		if [ $$i != wordlist ] ; then\
-			./main --type bst < data/operations_$$i.txt > io/out_$$i-bst.txt 2> io/err_$$i-bst.txt;\
-		fi;\
-	done;
-	for i in $$(seq 0 4); do\
-		./main --type rbt < data/operations_permuted$$i.txt > io/out_permuted$$i-rbt.txt 2> io/err_permuted$$i-rbt.txt;\
-		./main --type splay < data/operations_permuted$$i.txt > io/out_permuted$$i-splay.txt 2> io/err_permuted$$i-splay.txt;\
-		./main --type bst < data/operations_permuted$$i.txt > io/out_permuted$$i-bst.txt 2> io/err_permuted$$i-bst.txt;\
-	done;
+	py test.py
 
 .PHONY: all clean test

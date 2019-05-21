@@ -8,6 +8,8 @@
 #include <iostream>
 
 
+extern int modification_count;
+
 template<class T>
 class RedBlackTree
 {
@@ -97,8 +99,11 @@ private:
 
             auto save = std::move(node);
             node = std::move(other_child(*save, dir));
+            modification_count++;
             other_child(*save, dir) = std::move(child(*node, dir));
+            modification_count++;
             child(*node, dir) = std::move(save);
+            modification_count++;
         }
 
         static bool remove_impl_balance(ptr_t& node, Direction dir)
@@ -108,8 +113,10 @@ private:
             if (is_red(s.get()))
             {
                 node->color = Color::Red;
+                modification_count++;
                 rotate_single(node, dir);
                 node->color = Color::Black;
+                modification_count++;
 
                 return remove_impl_balance(child(*node, dir), dir);
             }
@@ -126,7 +133,9 @@ private:
                 }
 
                 node->color = Color::Black;
+                modification_count++;
                 s->color = Color::Red;
+                modification_count++;
 
                 return fix;
             }
@@ -142,6 +151,7 @@ private:
                 else
                 {
                     s->color = Color::Red;
+                    modification_count++;
                     rotate_single(s, invert_direction(dir));
                     // node->color = Color::Red;
                     rotate_single(node, dir);
@@ -149,11 +159,18 @@ private:
                 }
 
                 node->color = save;
+                modification_count++;
                 //auto& p = child(*node, dir);
                 if (node->left)
+                {
                     node->left->color = Color::Black;
+                    modification_count++;
+                }
                 if (node->right)
+                {
                     node->right->color = Color::Black;
+                    modification_count++;
+                }
 
                 return false;
             }
@@ -187,11 +204,15 @@ private:
                     else if (is_red(save.get()))
                     {
                         if (save)
+                        {
                             save->color = Color::Black;
+                            modification_count++;
+                        }
                         fix = false;
                     }
 
                     node = std::move(save);
+                    modification_count++;
                     return { true, fix };
                 }
                 else
@@ -199,6 +220,7 @@ private:
                     auto& swapped = TreeUtil::max_node(node->left);
                     using std::swap;
                     swap(swapped->value, node->value);
+                    modification_count++;
                     dir = Direction::Left;
                 }
             }
@@ -217,7 +239,10 @@ private:
         {
             auto ret = remove_impl(root, value, cmp).removed;
             if (ret && root)
+            {
                 root->color = Color::Black;
+                modification_count++;
+            }
 
             return ret;
         }
@@ -247,8 +272,11 @@ private:
                 if (is_red(other_dir_child.get()))
                 {
                     node->color = Color::Red;
+                    modification_count++;
                     dir_child->color = Color::Black;
+                    modification_count++;
                     other_dir_child->color = Color::Black;
+                    modification_count++;
 
                     return ret;
                 }
@@ -257,16 +285,21 @@ private:
                     if (is_red(child(*dir_child, *dir).get()))
                     {
                         node->color = Color::Red;
+                        modification_count++;
                         rotate_single(node, invert_direction(*dir));
                         node->color = Color::Black;
+                        modification_count++;
                         return { ret.inserted, false };
                     }
                     else if (is_red(other_child(*dir_child, *dir).get()))
                     {
                         dir_child->color = Color::Red;
+                        modification_count++;
                         rotate_single(dir_child, *dir);
                         dir_child->color = Color::Black;
+                        modification_count++;
                         node->color = Color::Red;
+                        modification_count++;
                         rotate_single(node, invert_direction(*dir));
                         node->color = Color::Black;
                         return { ret.inserted, false };
@@ -283,7 +316,10 @@ private:
         {
             auto ret = insert_impl(root, value, cmp).inserted;
             if (ret)
+            {
                 root->color = Color::Black;
+                modification_count++;
+            }
 
             return ret;
         }

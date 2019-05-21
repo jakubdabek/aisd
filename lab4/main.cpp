@@ -20,6 +20,8 @@
 using std::string_literals::operator ""s;
 
 
+int modification_count = 0;
+
 void main_bst(const std::set<std::string>&);
 void main_rbt(const std::set<std::string>&);
 void main_splay(const std::set<std::string>&);
@@ -77,7 +79,7 @@ void main_tree(const std::set<std::string>&)
         return;
     }
 
-    auto load_and = [&](auto&& F)
+    const auto load_and = [&](auto&& F)
     {
         std::string filename;
         if (!(std::cin >> filename))
@@ -89,12 +91,12 @@ void main_tree(const std::set<std::string>&)
             return true;
         }
         T value;
-        int counter = 0;
+        // int counter = 0;
         while (file >> value)
         {
             std::invoke(F, value);
-            if (++counter % 100 == 0)
-                std::cout << "Loaded " << counter << " values\n";
+            // if (++counter % 1000 == 0)
+                // std::cout << "Loaded " << counter << " values\n";
         }
         return true;
     };
@@ -199,10 +201,11 @@ void main_tree(const std::set<std::string>&)
             "load_search",
             [&]
             {
-                return load_and([&](const T& value)
-                {
-                    std::cout << value << " " << do_search(value) << std::endl;
-                });
+                // return load_and([&](const T& value)
+                // {
+                //     std::cout << value << " " << do_search(value) << std::endl;
+                // });
+                return load_and(do_search);
             }
         },
         {
@@ -265,7 +268,13 @@ void main_tree(const std::set<std::string>&)
 
     operations.at("help")();
 
+    std::vector<std::tuple<std::string, double, long, long>> partial_stats;
+    partial_stats.reserve(20);
+    long last_comparison_count = 0;
+    long last_modification_count = 0;
+
     auto start_time = std::chrono::high_resolution_clock::now();
+    auto last_time = start_time;
 
     for (int i = 0; i < ops || ops < 0; i++)
     {
@@ -283,6 +292,22 @@ void main_tree(const std::set<std::string>&)
                 std::cin.clear();
                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             }
+            else
+            {
+                const auto current_time = std::chrono::high_resolution_clock::now();
+                const auto current_comparison_count = bst.comparer().comparisons();
+                const auto current_modification_count = modification_count;
+                partial_stats.emplace_back(
+                    std::move(op),
+                    std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(current_time - last_time).count(),
+                    current_comparison_count - last_comparison_count,
+                    current_modification_count - last_modification_count
+                );
+
+                last_time = current_time;
+                last_comparison_count = current_comparison_count;
+                last_modification_count = current_modification_count;
+            }
         }
         else
         {
@@ -298,6 +323,8 @@ void main_tree(const std::set<std::string>&)
     std::cout << "Number of deletions: " << delete_count << std::endl;
     std::cout << "Number of inorders: " << inorder_count << std::endl;
     std::cout << "Number of comparisons: " << bst.comparer().comparisons() << std::endl;
+    std::cout << "Number of modifications: " << modification_count << std::endl;
+    std::cout << "Partial results: " << partial_stats << std::endl;
     std::cout << "Max size: " << max_size << std::endl;
     std::cout << "Current size: " << current_size << std::endl;
 }

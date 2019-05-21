@@ -58,6 +58,18 @@ std::ostream& operator<<(std::ostream& os, const std::pair<T, U> p)
     return os << "(" << p.first << ", " << p.second << ")";
 }
 
+template<class T, class U, class V>
+std::ostream& operator<<(std::ostream& os, const std::tuple<T, U, V> t)
+{
+    return os << "(" << std::get<0>(t) << ", " << std::get<1>(t) << ", " << std::get<2>(t) << ")";
+}
+
+template<class T1, class T2, class T3, class T4>
+std::ostream& operator<<(std::ostream& os, const std::tuple<T1, T2, T3, T4> t)
+{
+    return os << "(" << std::get<0>(t) << ", " << std::get<1>(t) << ", " << std::get<2>(t) << ", " << std::get<3>(t) << ")";
+}
+
 inline struct noop_stream_t : std::ostream
 {
     template<class T>
@@ -85,7 +97,7 @@ class Swapper
 public:
     void swap(T& a, T& b) noexcept(std::is_nothrow_swappable_v<T>);
 
-    int swaps() const noexcept
+    long swaps() const noexcept
     {
         return _swaps;
     }
@@ -101,12 +113,48 @@ public:
     }
 
 private:
-    int _swaps = 0;
+    long _swaps = 0;
     std::reference_wrapper<std::ostream> _os{noop_stream};
 };
 
 template<class T>
 inline void Swapper<T>::swap(T& a, T& b) noexcept(std::is_nothrow_swappable_v<T>)
+{
+    _os.get() << "Swapping " << a << " and " << b << std::endl;
+    _swaps++;
+    using std::swap;
+    swap(a, b);
+}
+
+template<>
+class Swapper<void>
+{
+public:
+    template<class T>
+    void swap(T& a, T& b) noexcept(std::is_nothrow_swappable_v<T>);
+
+    long swaps() const noexcept
+    {
+        return _swaps;
+    }
+
+    void set_verbose(bool verbose, std::ostream& os = std::cerr) noexcept
+    {
+        _os = maybe_stream(verbose, os);
+    }
+
+    void reset() noexcept
+    {
+        _swaps = 0;
+    }
+
+private:
+    long _swaps = 0;
+    std::reference_wrapper<std::ostream> _os{noop_stream};
+};
+
+template<class T>
+inline void Swapper<void>::swap(T& a, T& b) noexcept(std::is_nothrow_swappable_v<T>)
 {
     _os.get() << "Swapping " << a << " and " << b << std::endl;
     _swaps++;
@@ -125,7 +173,7 @@ public:
 
     bool compare(const T& a, const T& b) noexcept;
 
-    int comparisons() const noexcept
+    long comparisons() const noexcept
     {
         return _comparisons;
     }
@@ -141,7 +189,7 @@ public:
     }
 
 private:
-    int _comparisons = 0;
+    long _comparisons = 0;
     std::function<bool(const T&, const T&)> _cmp;
     std::reference_wrapper<std::ostream> _os{noop_stream};
 };

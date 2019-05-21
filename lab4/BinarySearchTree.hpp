@@ -7,6 +7,8 @@
 #include <utility>
 
 
+extern int modification_count;
+
 template<class T>
 class BinarySearchTree
 {
@@ -65,11 +67,13 @@ private:
                 if (!node->left)
                 {
                     node = std::move(node->right);
+                    modification_count++;
                     return true;
                 }
                 if (!node->right)
                 {
                     node = std::move(node->left);
+                    modification_count++;
                     return true;
                 }
 
@@ -77,6 +81,7 @@ private:
                 auto& swapped = TreeUtil::max_node(node->left);
                 using std::swap;
                 swap(swapped->value, node->value);
+                modification_count++;
                 return remove(swapped, value, cmp);
             }
         }

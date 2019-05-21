@@ -7,6 +7,8 @@
 #include <memory>
 
 
+extern int modification_count;
+
 template<class T>
 class SplayTree
 {
@@ -121,21 +123,28 @@ private:
                     auto tmp = std::move(ch);
                     auto& ch_other_ch = other_child(*tmp, *child_dir);
                     ch = std::move(ch_other_ch);
+                    modification_count++;
                     ch_other_ch = std::move(root);
+                    modification_count++;
                     root = std::move(tmp);
+                    modification_count++;
                 }
 
                 ptr_t *&tmp_tree = select_tree(*dir);
                 *tmp_tree = std::move(root);
+                modification_count++;
                 tmp_tree = &child(**tmp_tree, *dir);
                 root = std::move(*tmp_tree);
+                modification_count++;
             }
 
             *left_max = std::move(root->left);
             *right_min = std::move(root->right);
 
             root->left = std::move(left);
+            modification_count++;
             root->right = std::move(right);
+            modification_count++;
 
             return found;
         }
@@ -154,11 +163,14 @@ private:
             {
                 splay(root->left, value, cmp);
                 root->left->right = std::move(root->right);
+                modification_count++;
                 root = std::move(root->left);
+                modification_count++;
             }
             else
             {
                 root = std::move(root->right);
+                modification_count++;
             }
 
             return true;
@@ -181,8 +193,11 @@ private:
 
             auto new_node = std::make_unique<Node>(value);
             child(*new_node, *dir) = std::move(child(*root, *dir));
+            modification_count++;
             other_child(*new_node, *dir) = std::move(root);
+            modification_count++;
             root = std::move(new_node);
+            modification_count++;
 
             return true;
         }
