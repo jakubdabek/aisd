@@ -253,6 +253,7 @@ private:
             if (!node)
             {
                 node = std::make_unique<Node>(value);
+                modification_count++;
                 return { true, true };
             }
 

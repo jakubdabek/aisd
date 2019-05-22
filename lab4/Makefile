@@ -1,4 +1,4 @@
-CXXFLAGS := -std=c++2a -Wall -Wextra
+CXXFLAGS := -std=c++2a -Wall -Wextra -g
 CXX := g++
 TYPE=std::string
 
@@ -21,6 +21,8 @@ clean:
 	$(RM) *.o main
 
 test:
-	py test.py
+	for i in $$(seq 1 2); do \
+		py test.py __$$i; \
+	done;
 
 .PHONY: all clean test

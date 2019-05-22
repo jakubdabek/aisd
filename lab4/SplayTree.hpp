@@ -181,6 +181,7 @@ private:
             if (!root)
             {
                 root = std::make_unique<Node>(value);
+                modification_count++;
                 return true;
             }
 

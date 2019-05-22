@@ -9,8 +9,12 @@ root = Path("./data/data")
 bst_types = ("bst", "rbt", "splay")
 
 operations = Path("./data/operations/operations.txt").read_text()
+if (len(sys.argv) > 1):
+    suffix = sys.argv[1]
+else:
+    suffix = ""
 
-with Path("./out/output.txt").open("w+") as cumulative_output:
+with Path("./out/output{}.txt".format(suffix)).open("w") as cumulative_output:
     for folder in root.iterdir():
         folder = Path(folder)    
         print(folder.name)
@@ -39,7 +43,7 @@ with Path("./out/output.txt").open("w+") as cumulative_output:
 
                 cumulative_output.write(
                     str(out_file.relative_to("./out")) + ":\n" +
-                    subprocess.check_output(["tail", "-n", "10", str(out_file.absolute())], universal_newlines=True) +
+                    subprocess.check_output(["tail", "-n", "11", str(out_file.absolute())], universal_newlines=True) +
                     "\n"
                 )
                 

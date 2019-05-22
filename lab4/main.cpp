@@ -268,7 +268,7 @@ void main_tree(const std::set<std::string>&)
 
     operations.at("help")();
 
-    std::vector<std::tuple<std::string, double, long, long>> partial_stats;
+    std::vector<std::tuple<std::string, double, double, double>> partial_stats;
     partial_stats.reserve(20);
     long last_comparison_count = 0;
     long last_modification_count = 0;
@@ -325,6 +325,14 @@ void main_tree(const std::set<std::string>&)
     std::cout << "Number of comparisons: " << bst.comparer().comparisons() << std::endl;
     std::cout << "Number of modifications: " << modification_count << std::endl;
     std::cout << "Partial results: " << partial_stats << std::endl;
+    for (auto& s : partial_stats)
+    {
+        std::get<1>(s) /= insert_count;
+        std::get<1>(s) *= 1000.0;
+        std::get<2>(s) /= insert_count;
+        std::get<3>(s) /= insert_count;
+    }
+    std::cout << "Partial results per one op: " << partial_stats << std::endl;
     std::cout << "Max size: " << max_size << std::endl;
     std::cout << "Current size: " << current_size << std::endl;
 }

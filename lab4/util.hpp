@@ -197,7 +197,7 @@ private:
 template<class T>
 inline bool Comparer<T>::compare(const T& a, const T& b) noexcept
 {
-    _os.get() << "Comparing " << a << " and " << b << std::endl;
+    // _os.get() << "Comparing " << a << " and " << b << std::endl;
     _comparisons++;
 
     return _cmp(a, b);
