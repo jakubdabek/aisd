@@ -9,8 +9,11 @@ optimized: all
 debug: CXXFLAGS+=-O0 -g
 debug: all
 
-main: main.cpp util.hpp
+main: main.cpp MaxFlow.o util.hpp
 	$(CXX) $(CXXFLAGS) -o $@ $(filter-out %.hpp,$^) $(LDXXFLAGS)
+
+MaxFlow.o: MaxFlow.cpp MaxFlow.hpp util.hpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $(filter-out %.hpp,$^)
 
 clean:
 	$(RM) *.o main
