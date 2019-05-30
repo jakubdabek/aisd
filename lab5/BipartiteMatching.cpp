@@ -240,7 +240,7 @@ void main_match(const int graphExponent, const int degree, const options_t& opti
         }
     }
 
-    bool terse = std::find(options.begin(), options.end(), "--terse") != options.end();
+    const bool terse = std::find(options.begin(), options.end(), "--terse") != options.end();
     
     auto startTime = std::chrono::high_resolution_clock::now();
 

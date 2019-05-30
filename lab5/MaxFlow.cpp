@@ -6,6 +6,7 @@
 #include <chrono>
 #include <string>
 #include <random>
+#include <fstream>
 
 
 namespace {
@@ -110,36 +111,102 @@ void update_edges(
 }
 } // namespace
 
-void main_flow(const int bitLength, const options_t&)
+void main_flow(const int bitLength, const options_t& options)
 {
     auto wholeMainStartTime = std::chrono::high_resolution_clock::now();
 
     const vertex_t graphSize = 1 << bitLength;
 
-    std::vector<uint8_t> hammingWeights(graphSize);
-    hammingWeights[0] = 0;
-    for (vertex_t i = 1; i < graphSize; i++)
-    {
-        hammingWeights[i] = (i & 1) + hammingWeights[i / 2];
-    }
-
     std::vector<std::vector<edmonds_karp_info>> graph;
     graph.reserve(graphSize);
-    std::mt19937 rng{std::random_device{}()};
-    // std::mt19937 rng{42};
-    for (vertex_t i = 0; i < graphSize; i++)
+
+    if (options[0] == "--read")
     {
-        int h = hammingWeights[i];
-        auto& c = graph.emplace_back(bitLength);
-        std::uniform_int_distribution dist{1, 1 << std::max(h + 1, bitLength - h)};
-        for (int j = 0; j < bitLength; j++)
+        std::fstream file(options[1]);
+        if (!file.is_open())
         {
-            if ((i & (1 << j)) == 0)
+            std::cerr << "Wrong file: " << options[1] << std::endl;
+            exit(1);
+        }
+
+        for (vertex_t i = 0; i < graphSize; i++)
+        {
+            auto& c = graph.emplace_back();
+            c.reserve(bitLength);
+
+            for (int j = 0; j < bitLength; j++)
             {
-                c[j] = edmonds_karp_info(dist(rng));
+                int a;
+                if (!(file >> a))
+                {
+                    std::cerr << "Wrong data in file: " << options[1] << std::endl;
+                    exit(1);
+                }
+
+                c.emplace_back(a);
             }
         }
     }
+    else
+    {
+        std::vector<uint8_t> hammingWeights(graphSize);
+        hammingWeights[0] = 0;
+        for (vertex_t i = 1; i < graphSize; i++)
+        {
+            hammingWeights[i] = (i & 1) + hammingWeights[i / 2];
+        }
+
+        std::mt19937 rng{std::random_device{}()};
+        // std::mt19937 rng{42};
+        for (vertex_t i = 0; i < graphSize; i++)
+        {
+            int h = hammingWeights[i];
+            auto& c = graph.emplace_back(bitLength);
+            std::uniform_int_distribution dist{1, 1 << std::max(h + 1, bitLength - h)};
+            for (int j = 0; j < bitLength; j++)
+            {
+                if ((i & (1 << j)) == 0)
+                {
+                    c[j] = edmonds_karp_info(dist(rng));
+                }
+            }
+        }
+
+        if (options[0] == "--write")
+        {
+            std::fstream file(options[1], std::fstream::out | std::fstream::trunc);
+            if (!file.is_open())
+            {
+                std::cerr << "Wrong file: " << options[1] << std::endl;
+                exit(1);
+            }
+
+            for (vertex_t i = 0; i < graphSize; i++)
+            {
+                for (int j = 0; j < bitLength; j++)
+                {
+                    auto v = graph[i][j];
+                    // std::cout << v << " ";
+                    if (!(file << v.capacity))
+                    {
+                        std::cerr << "Wrong data in file: " << options[1] << std::endl;
+                        exit(1);
+                    }
+                    file << " ";
+                }
+                file << "\n";
+            }
+
+            file.close();
+            auto endTime = std::chrono::high_resolution_clock::now();
+            std::cout << "Done writing: " << options[1] 
+                      << " in " << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(endTime - wholeMainStartTime).count() << "ms" << std::endl;
+
+            exit(0);
+        }
+    }
+    
+    const bool terse = std::find(options.begin(), options.end(), "--terse") != options.end();
 
     // graph = 
     // {
@@ -187,11 +254,21 @@ void main_flow(const int bitLength, const options_t&)
 
     auto endTime = std::chrono::high_resolution_clock::now();
 
-    // std::cout << graph << std::endl;
-    std::cout << "\n" << std::string(50, '-') << "\n\n";
-    std::cout << "Size: " << bitLength << "\n";
-    std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(endTime - startTime).count() << "ms\n";
-    std::cout << "Time (with init): " << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(endTime - wholeMainStartTime).count() << "ms\n";
-    std::cout << "Flow: " << maxFlow << "\n";
-    std::cout << "Augumenting paths: " << augumentingPathsCount << std::endl;
+    if (terse)
+    {
+        std::cout << bitLength << " "
+                  << maxFlow << " "
+                  << augumentingPathsCount << " " 
+                  << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(endTime - startTime).count() << std::endl;
+    }
+    else
+    {
+        // std::cout << graph << std::endl;
+        std::cout << "\n" << std::string(50, '-') << "\n\n";
+        std::cout << "Size: " << bitLength << "\n";
+        std::cout << "Time: " << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(endTime - startTime).count() << "ms\n";
+        std::cout << "Time (with init): " << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(endTime - wholeMainStartTime).count() << "ms\n";
+        std::cout << "Flow: " << maxFlow << "\n";
+        std::cout << "Augumenting paths: " << augumentingPathsCount << std::endl;
+    }
 }

@@ -20,14 +20,22 @@ clean:
 
 test: test-flow test-match
 
-test-flow: main
+test-flow-init: optimized
 	for i in $$(seq 1 16); do \
-		for j in $$(seq 1 5); do \
-			./main --size $$i; \
+		mkdir -p data/$$i; \
+		for k in $$(seq 1 10); do \
+			./main --size $$i --write data/$$i/flow-$$k; \
 		done; \
-	done;
+	done
 
-test-match-init: main
+test-flow: optimized
+	for i in $$(seq 1 16); do \
+		for k in $$(seq 1 10); do \
+			./main --size $$i --read data/$$i/flow-$$k --terse; \
+		done; \
+	done > out-flow-$$(date -Iminutes).txt;
+
+test-match-init: optimized
 	for i in $$(seq 1 16); do \
 		for j in $$(seq 1 $$i); do \
 			mkdir -p data/$$i-$$j; \
@@ -37,13 +45,13 @@ test-match-init: main
 		done; \
 	done
 
-test-match: main
+test-match: optimized
 	for i in $$(seq 1 16); do \
 		for j in $$(seq 1 $$i); do \
 			for k in $$(seq 1 50); do \
 				./main --size $$i --degree $$j --read data/$$i-$$j/match-$$k --terse; \
 			done; \
 		done; \
-	done > out-match-$$(date +%FT%T).txt;
+	done > out-match-$$(date -Iminutes).txt;
 
 .PHONY: all clean test
