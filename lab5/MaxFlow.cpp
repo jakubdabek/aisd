@@ -110,7 +110,7 @@ void update_edges(
 }
 } // namespace
 
-void main_flow(const int bitLength, const set_t&)
+void main_flow(const int bitLength, const options_t&)
 {
     auto wholeMainStartTime = std::chrono::high_resolution_clock::now();
 

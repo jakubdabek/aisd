@@ -100,3 +100,7 @@ constexpr bool is_power_of_2(size_t value)
 {
     return (value & (value - 1)) == 0;
 }
+
+
+//using options_t = std::set<std::string, std::less<>>;
+using options_t = std::vector<std::string>;

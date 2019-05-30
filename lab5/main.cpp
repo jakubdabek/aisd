@@ -1,5 +1,6 @@
 #include "util.hpp"
 #include "MaxFlow.hpp"
+#include "BipartiteMatching.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -15,10 +16,6 @@
 
 using std::string_literals::operator ""s;
 
-using set_t = std::set<std::string, std::less<>>;
-
-void main_gplk(int size, const set_t&);
-void main_flow(int size, const set_t&);
 
 int main(int argc, char *argv[])
 {
@@ -28,17 +25,29 @@ int main(int argc, char *argv[])
     int size;
     if (!(std::stringstream{argv[2]} >> size))
         return 1;
-
-    set_t options;
-    for (int i = 3; i < argc; i++)
+    
+    int lastArg = 3;
+    int degree = -1;
+    if (argc >= 5 && argv[3] == "--degree"s)
     {
-        options.emplace(argv[i]);
+        lastArg = 5;
+        if (!(std::stringstream{argv[2]} >> degree))
+            return 1;
     }
 
-    if (options.count("--gplk") > 0)
-        main_gplk(size, options);
-    else
-        main_flow(size, options);
-}
+    options_t options;
+    for (int i = lastArg; i < argc; i++)
+    {
+        options.emplace_back(argv[i]);
+    }
 
-void main_gplk(const int, const set_t&) {}
+    if (degree > 0)
+    {
+        main_match(size, degree, options);
+    }
+    else
+    {
+        main_flow(size, options);
+    }
+    
+}
