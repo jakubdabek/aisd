@@ -76,7 +76,7 @@ glpk-flow: main
 	done
 
 glpk-match-init: main
-	for i in $$(seq 1 16); do \
+	for i in $$(seq 1 11); do \
 		for j in $$(seq 1 $$i); do \
 			mkdir -p data/glpk/$$i-$$j; \
 			for k in $$(seq 1 50); do \
@@ -88,7 +88,7 @@ glpk-match-init: main
 glpk-match: main
 	mkdir -p out/glpk; \
 	echo -n > out/glpk-match.txt; \
-	for i in $$(seq 1 11); do \
+	for i in $$(seq 1 10); do \
 		for j in $$(seq 1 $$i); do \
 			for k in $$(seq 1 50); do \
 				glpsol --math bipartite-matching.mod --data data/glpk/$$i-$$j/match-$$k --output out/glpk/match-$$i-$$j-$$k.txt >/dev/null;  \
