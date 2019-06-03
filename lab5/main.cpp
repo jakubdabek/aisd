@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     if (argc >= 5 && argv[3] == "--degree"s)
     {
         lastArg = 5;
-        if (!(std::stringstream{argv[2]} >> degree))
+        if (!(std::stringstream{argv[4]} >> degree))
             return 1;
     }
 

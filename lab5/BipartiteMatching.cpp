@@ -111,6 +111,7 @@ bool find_match(const std::vector<std::vector<vertex_t>>& graph,
     std::vector<vertex_t>& match,
     const vertex_t i)
 {
+    // std::cout << "find_match(" << seen << ", " << match << ", " << i << ")" << std::endl;
     for (vertex_t j : graph[i])
     {
         if (!seen[j])
@@ -134,11 +135,43 @@ int bpm(std::vector<std::vector<vertex_t>>& graph)
 
     for (int i = 0; i < graph.size(); i++)
     {
+        std::fill(seen.begin(), seen.end(), false);
         if (find_match(graph, seen, match, i))
             matches++;
     }
 
     return matches;
+}
+
+void generate_model(
+    const std::vector<std::vector<vertex_t>>& graph,
+    int degree,
+    vertex_t graphSize,
+    std::string filename)
+{
+    std::fstream file(filename, std::fstream::out | std::fstream::trunc);
+    if (!file.is_open())
+    {
+        std::cerr << "Wrong file: " << filename << std::endl;
+        exit(1);
+    }
+
+    file << "param n := " << graphSize << ";\n";
+    file << "param : E : capacity :=\n";
+
+    for (vertex_t i = 0; i < graphSize; i++)
+    {
+        for (int j = 0; j < degree; j++)
+        {
+            auto v = graph[i][j];
+            file << (i + 1) << " " << (v + 1) << " 1" << "\n";
+        }
+    }
+
+    file << ";\n";
+
+    file.close();
+    std::cout << "Done writing: " << filename << std::endl;
 }
 } // namespace
 
@@ -151,7 +184,7 @@ void main_match(const int graphExponent, const int degree, const options_t& opti
     std::vector<std::vector<vertex_t>> graph;
     graph.reserve(graphSize);
 
-    if (options[0] == "--read")
+    if (!options.empty() && options[0] == "--read")
     {
         std::fstream file(options[1]);
         if (!file.is_open())
@@ -206,7 +239,7 @@ void main_match(const int graphExponent, const int degree, const options_t& opti
             // }
         }
 
-        if (options[0] == "--write")
+        if (!options.empty() && options[0] == "--write")
         {
             std::fstream file(options[1], std::fstream::out | std::fstream::trunc);
             if (!file.is_open())
@@ -236,12 +269,19 @@ void main_match(const int graphExponent, const int degree, const options_t& opti
             std::cout << "Done writing: " << options[1] 
                       << " in " << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(endTime - wholeMainStartTime).count() << "ms" << std::endl;
 
-            exit(0);
+            return;
         }
     }
 
+    if (auto it = std::find(options.begin(), options.end(), "--glpk"); it != options.end())
+    {
+        generate_model(graph, degree, graphSize, *(++it));
+        return;
+    }
+
     const bool terse = std::find(options.begin(), options.end(), "--terse") != options.end();
-    
+    if (!terse)
+        std::cout << graph << std::endl;    
     auto startTime = std::chrono::high_resolution_clock::now();
 
     int result = bpm(graph);

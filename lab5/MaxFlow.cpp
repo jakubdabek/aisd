@@ -109,6 +109,38 @@ void update_edges(
         previous = current;
     }
 }
+
+void generate_model(
+    const std::vector<std::vector<edmonds_karp_info>>& graph,
+    int bitLength,
+    vertex_t graphSize,
+    std::string filename)
+{
+    std::fstream file(filename, std::fstream::out | std::fstream::trunc);
+    if (!file.is_open())
+    {
+        std::cerr << "Wrong file: " << filename << std::endl;
+        exit(1);
+    }
+
+    file << "param n := " << graphSize << ";\n";
+    file << "param : E : a :=\n";
+
+    for (vertex_t i = 0; i < graphSize; i++)
+    {
+        for (int j = 0; j < bitLength; j++)
+        {
+            auto v = graph[i][j];
+            if (v.capacity > 0)
+                file << (i + 1) << " " << ((i ^ (1 << j)) + 1) << " " << v.capacity << "\n";
+        }
+    }
+
+    file << ";\n";
+
+    file.close();
+    std::cout << "Done writing: " << filename << std::endl;
+}
 } // namespace
 
 void main_flow(const int bitLength, const options_t& options)
@@ -202,10 +234,16 @@ void main_flow(const int bitLength, const options_t& options)
             std::cout << "Done writing: " << options[1] 
                       << " in " << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(endTime - wholeMainStartTime).count() << "ms" << std::endl;
 
-            exit(0);
+            return;
         }
     }
     
+    if (auto it = std::find(options.begin(), options.end(), "--glpk"); it != options.end())
+    {
+        generate_model(graph, bitLength, graphSize, *(++it));
+        return;
+    }
+
     const bool terse = std::find(options.begin(), options.end(), "--terse") != options.end();
 
     // graph = 
